@@ -24,6 +24,16 @@ The application is primarily client-interactive, so the real-time form and dashb
 
 The decision does not rely on claims that previous supported Next.js versions are obsolete; it simply selects the current Active LTS version for a new project.
 
+### Phase 0 Implementation Note
+
+The project was scaffolded with Next.js 16.3.3. The checked-in production build
+script uses Next.js's supported `next build --webpack` fallback because the local
+validation environment prevents Turbopack's CSS transform worker from binding a
+loopback port. This does not change the App Router, React, TypeScript, Tailwind,
+or deployment architecture. The same build completed successfully on Vercel with
+Node.js 24 and was production-verified on August 28, 2026. Keep webpack for the
+P0 checkpoint; Turbopack can be re-evaluated later without blocking delivery.
+
 ---
 
 ## ADR 002: Supabase Realtime for Transport

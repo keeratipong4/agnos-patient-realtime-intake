@@ -12,6 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Commands
 
+- `nvm use` selects the checked-in Node.js 24 toolchain.
 - `npm run dev` starts the Next.js development server.
 - `npm run build` creates the production build with Next.js's supported webpack
   fallback. Turbopack cannot bind its CSS transform worker port in the current
@@ -46,5 +47,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Keep connection state independent from Patient lifecycle state. Presence is
   for slow-changing participation; Broadcast carries form and lifecycle events.
 - Do not start P2 features until P0 is deployed and verified in production.
+- The Phase 1 P0 checkpoint was deployed and verified on August 28, 2026 at
+  `https://agnos-patient-realtime-intake.vercel.app`; Phase 2 may now begin.
 - Do not push, deploy, or create external resources without explicit user
   confirmation.

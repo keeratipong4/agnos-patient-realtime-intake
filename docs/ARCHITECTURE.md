@@ -279,6 +279,23 @@ src/
 
 The form subscription used for broadcasting should not force a root form re-render on every keystroke. Use a scoped React Hook Form subscription, and clean up debounced callbacks and Supabase channels on unmount.
 
+### Phase 1 Implementation Status — Completed August 28, 2026
+
+The current repository stops at the required real-time vertical slice. It uses a
+temporary `firstName` input with `usePatientVerticalSlice` and
+`useStaffVerticalSlice` to implement UUID channel isolation, debounced
+`FORM_PATCH`, Patient Presence, and the `SNAPSHOT_REQUEST` / `FORM_SNAPSHOT`
+handshake. The shared event module reserves the remaining P0 event names, but
+Patient lifecycle transitions, `STATUS_CHANGED`, `FORM_SUBMITTED`, the complete
+form schema, and the final component names shown above are intentionally not yet
+wired. The vertical slice is deployed at
+`https://agnos-patient-realtime-intake.vercel.app` and has passed production
+checks for invalid UUID rejection, Unicode `FORM_PATCH` delivery, reconnect
+snapshot recovery, Patient Presence leave, and cross-session isolation. The
+Supabase project currently runs in `ap-northeast-2` (Seoul); this is accepted for
+the assignment demo because P0 correctness and deployment take priority over
+regional latency optimization.
+
 ---
 
 ## 7. Data Handling and Security Boundary

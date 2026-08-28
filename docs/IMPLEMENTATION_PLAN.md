@@ -25,23 +25,23 @@ Complete and deploy all P0 work before starting any optional enhancement. If a P
 
 ## Phase 0: Repository and Project Foundation (45-60 minutes)
 
-- [ ] Work only inside the nested `agnos-patient-intake/` repository; keep the confidential assignment PDF and personal study guide in the parent folder.
-- [ ] Initialize the Next.js application with App Router, TypeScript, ESLint, Tailwind CSS, and a lockfile.
-- [ ] Install only required dependencies:
+- [x] Work only inside the nested `agnos-patient-realtime-intake/` repository; keep the confidential assignment PDF and personal study guide in the parent folder.
+- [x] Initialize the Next.js application with App Router, TypeScript, ESLint, Tailwind CSS, and a lockfile.
+- [x] Install only required dependencies:
   - `@supabase/supabase-js`
   - `react-hook-form`
   - `zod`
   - `@hookform/resolvers`
   - selected UI primitives only as they become necessary
-- [ ] Add `.env.example` containing variable names but no credentials.
-- [ ] Add `AGENTS.md` with verified scripts, directory conventions, scope boundaries, and the rule that P2 work must not begin before successful deployment.
-- [ ] Add initial scripts for `dev`, `build`, `lint`, and tests if configured.
-- [ ] Make the first clean commit.
+- [x] Add `.env.example` containing variable names but no credentials.
+- [x] Add `AGENTS.md` with verified scripts, directory conventions, scope boundaries, and the rule that P2 work must not begin before successful deployment.
+- [x] Add initial scripts for `dev`, `build`, `lint`, and tests if configured.
+- [x] Make the first clean commit.
 
 ### Exit Criteria
-- [ ] Development server starts.
-- [ ] Lint and production build complete.
-- [ ] No PDF, credentials, or personal study notes are inside the repository.
+- [x] Development server starts.
+- [x] Lint and production build complete.
+- [x] No PDF, credentials, or personal study notes are inside the repository.
 
 ---
 
@@ -49,29 +49,34 @@ Complete and deploy all P0 work before starting any optional enhancement. If a P
 
 This phase de-risks Supabase and Vercel before the full UI is built.
 
-- [ ] Create a Supabase project and use its browser-safe publishable key.
-- [ ] Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally.
-- [ ] Implement UUID session generation on `/`.
-- [ ] Generate role links:
+> **Completed August 28, 2026:** The UUID routes, temporary field, debounced
+> Broadcast, Patient Presence, cleanup, and snapshot handshake pass local and
+> production verification. The deployed vertical slice is available at
+> `https://agnos-patient-realtime-intake.vercel.app`. Phase 2 may now begin.
+
+- [x] Create a Supabase project and use its browser-safe publishable key.
+- [x] Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally.
+- [x] Implement UUID session generation on `/`.
+- [x] Generate role links:
 
   ```text
   /patient?session=<uuid>
   /staff?session=<uuid>
   ```
 
-- [ ] Validate the session parameter before channel subscription.
-- [ ] Build one temporary Patient input and one Staff value display.
-- [ ] Verify `FORM_PATCH` delivery across two browser contexts.
-- [ ] Track Patient Presence once after `SUBSCRIBED` and verify join/leave behavior.
-- [ ] Remove channels, timers, and subscriptions on component unmount.
-- [ ] Deploy the vertical slice to Vercel.
-- [ ] Configure production environment variables and repeat the two-browser test on the deployed URL.
+- [x] Validate the session parameter before channel subscription.
+- [x] Build one temporary Patient input and one Staff value display.
+- [x] Verify `FORM_PATCH` delivery across two browser contexts.
+- [x] Track Patient Presence once after `SUBSCRIBED` and verify join/leave behavior.
+- [x] Remove channels, timers, and subscriptions on component unmount.
+- [x] Deploy the vertical slice to Vercel.
+- [x] Configure production environment variables and repeat the two-browser test on the deployed URL.
 
 ### Exit Criteria
-- [ ] A field typed in Patient appears in Staff without refresh.
-- [ ] Staff shows Patient connected/disconnected correctly.
-- [ ] Two different session IDs do not receive each other's events.
-- [ ] The deployed vertical slice works before Phase 2 begins.
+- [x] A field typed in Patient appears in Staff without refresh.
+- [x] Staff shows Patient connected/disconnected correctly.
+- [x] Two different session IDs do not receive each other's events.
+- [x] The deployed vertical slice works before Phase 2 begins.
 
 ---
 

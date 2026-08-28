@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agnos Patient Realtime Intake
 
-## Getting Started
+Real-time Patient and Staff intake assignment built with Next.js 16, TypeScript,
+Tailwind CSS, and Supabase Realtime. The current implementation is the Phase 1
+vertical slice: one temporary Patient input implements Broadcast, Presence, session
+isolation, and snapshot recovery before the full form is implemented. The deployed
+Phase 1 proof is available at
+[agnos-patient-realtime-intake.vercel.app](https://agnos-patient-realtime-intake.vercel.app).
 
-First, run the development server:
+## Local setup
+
+Use Node.js 24 LTS. With `nvm`, select the checked-in version, install from the
+lockfile, and copy the public environment variable template:
+
+```bash
+nvm use
+npm ci
+cp .env.example .env.local
+```
+
+Set these browser-safe values in `.env.local`:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+Never use a Supabase secret or service-role key. Then start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`, create a session, and open its Patient and Staff
+links in separate browser contexts. Type fake data in Patient and confirm that it
+appears in Staff. Refresh Staff while Patient stays open to exercise the snapshot
+handshake.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — start the development server.
+- `npm run lint` — run ESLint.
+- `npm run build` — create the production build with Next.js's webpack fallback.
+- `npm run start` — serve the production build.
 
-## Learn More
+No test runner is configured yet.
 
-To learn more about Next.js, take a look at the following resources:
+## Data and security boundary
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Use fake/demo data only. Never enter real patient information.
+- Drafts are held in React memory and sent through ephemeral Broadcast events.
+- Supabase auth persistence is disabled; the app does not use browser storage or
+  a database.
+- Public Realtime channels are acceptable only for this assignment demo. A real
+  system needs authentication, private channels, authorization, and a defined
+  retention policy.
+- If both clients disconnect, session data is lost by design.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Documentation
 
-## Deploy on Vercel
+The authoritative project documents are in `docs/`:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `REQUIREMENTS.md`
+- `DECISIONS.md`
+- `ARCHITECTURE.md`
+- `IMPLEMENTATION_PLAN.md`
+- `UI_UX_DESIGN.md`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+- Production: https://agnos-patient-realtime-intake.vercel.app
+- Host: Vercel, using the Node.js 24 runtime.
+- Realtime: Supabase Broadcast and Presence in `ap-northeast-2` (Seoul).
+- Verified on August 28, 2026 with two production browser tabs: Unicode patch
+  delivery, reconnect snapshot recovery, Presence leave, invalid UUID rejection,
+  and cross-session isolation all passed.

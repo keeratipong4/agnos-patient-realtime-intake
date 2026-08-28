@@ -20,3 +20,7 @@ test-results/
 # Logs and operating-system files
 *.log
 .DS_Store
+
+# TypeScript-generated files
+*.tsbuildinfo
+next-env.d.ts
