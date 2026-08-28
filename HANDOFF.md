@@ -22,10 +22,14 @@ this repository.
 ## Current State
 
 - Current working branch: `develop`.
+- GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake
+  (`origin`, public, default branch `main`).
 - Production checkpoint on `main`: `088e793 feat: add verified realtime vertical slice`.
 - Foundation commit: `d4b7799 chore: scaffold Next.js application foundation`.
 - Production: https://agnos-patient-realtime-intake.vercel.app
 - Vercel project: `keeratipong-boonnapongkasems-projects/agnos-patient-realtime-intake`.
+- The GitHub repository is connected to the existing Vercel project; `main` is
+  the production line and non-`main` branches are Preview deployments.
 - Supabase project ref: `kpigrftdqxsjggmxdjyr`.
 - Supabase primary region: `ap-northeast-2` (Seoul), accepted for P0.
 - Node.js: 24 LTS, pinned by `.nvmrc` and `package.json`.
