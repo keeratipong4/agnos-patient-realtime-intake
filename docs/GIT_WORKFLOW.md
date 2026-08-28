@@ -92,8 +92,10 @@ If the GitHub plan supports branch protection for this private repository:
 - Enable secret scanning and push protection when available.
 
 Create a GitHub Actions workflow with one uniquely named validation job after
-the Phase 2 test command is configured. Required status checks should only be
-selected after that job has run once on GitHub.
+the Phase 2 test command is configured. The current `.github/workflows/ci.yml`
+uses the uniquely named `quality` job and runs tests only when the script exists;
+Phase 2 will activate that step by adding the test script. Required status checks
+should only be selected after the job has run once on GitHub.
 
 ## Vercel Settings
 
