@@ -23,8 +23,10 @@ this repository.
 
 - Integration branch: `develop`; it was fast-forwarded through the latest
   production release before this handoff update.
-- Next working branch: `feature/patient-schema`, created from the updated
-  `develop` branch and currently holding the uncommitted Phase 2 work.
+- Phase 2 commit: `32c2051 feat: add patient schema contracts and validation`,
+  fast-forwarded and pushed to `develop` on August 28, 2026.
+- Next working branch: create `feature/realtime-protocol` from the updated
+  `develop` branch for Phase 3.
 - GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake
   (`origin`, public, default branch `main`).
 - Production checkpoint on `main`: `621f2b0 Merge pull request #1 from
@@ -56,9 +58,9 @@ use PR, CI, and Preview checks manually until that decision is revisited.
 ## Completed and Verified
 
 Phase 0 and the Phase 1 real-time vertical slice are complete. Phase 2 data
-contracts and validation are complete locally on `feature/patient-schema` but
-have not been committed, pushed, or deployed. Local and Vercel production checks
-passed for Phase 1:
+contracts and validation are merged into `develop` at `32c2051` and pushed, but
+have not been released to `main` or verified in production. Local and Vercel
+production checks passed for Phase 1:
 
 - lint and the webpack production build;
 - secure UUID session generation and invalid UUID rejection;
@@ -85,11 +87,12 @@ for the P0 checkpoint. Vercel and local webpack builds pass.
 
 ## Immediate Next Work
 
-Review and commit the local Phase 2 change when ready, then start Phase 3 from
-`docs/IMPLEMENTATION_PLAN.md`: implement the complete protocol/recovery hooks,
-revision ordering, lifecycle events, and submission handling before building the
-complete Patient form. P2 bonus features remain out of scope until all P0
-acceptance checks pass on the final production implementation.
+Create `feature/realtime-protocol` from the updated `develop` branch, then start
+Phase 3 from `docs/IMPLEMENTATION_PLAN.md`: implement the complete
+protocol/recovery hooks, revision ordering, lifecycle events, and submission
+handling before building the complete Patient form. P2 bonus features remain out
+of scope until all P0 acceptance checks pass on the final production
+implementation.
 
 ## Git Workflow
 
@@ -113,13 +116,14 @@ Continue the Agnos assignment in:
 /Users/keeratipong/Desktop/Dev works/agnos-assignment/agnos-patient-realtime-intake
 
 Read AGENTS.md, HANDOFF.md, docs/GIT_WORKFLOW.md, and all five authoritative
-documents before editing. Verify git status and use feature/patient-schema,
-created from develop; never work directly on main. Phase 0 and the Phase 1
+documents before editing. Verify git status, update develop with a fast-forward,
+then create and use feature/realtime-protocol; never work directly on main.
+Phase 0 and the Phase 1
 production realtime vertical slice are complete at
 https://agnos-patient-realtime-intake.vercel.app. Production checkpoint 621f2b0
 has passed GitHub CI and Vercel verification. Phase 2 data contracts, Zod
-validation, and Vitest coverage are complete locally on `feature/patient-schema`
-and await review/commit. Start Phase 3 protocol/recovery test-first. Preserve the P0 scope: no database, browser
+validation, and Vitest coverage are merged into develop at `32c2051`. Start
+Phase 3 protocol/recovery test-first. Preserve the P0 scope: no database, browser
 persistence, real patient data, auth, /demo, or multi-patient dashboard. Run
 lint, configured tests, and production build, then report changes and blockers.
 Do not push or create external resources without my explicit confirmation.
