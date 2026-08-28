@@ -26,7 +26,8 @@ export function SessionLauncher() {
             views in separate browser contexts to verify the live connection.
           </p>
           <div className="mt-9 rounded-2xl border border-amber-300/25 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100">
-            Demo only. Use fake information and never enter real patient data.
+            Demo only — Data is transmitted ephemerally and is not saved to a
+            database or this browser.
             This vertical slice is ephemeral and has no database or browser
             persistence.
           </div>

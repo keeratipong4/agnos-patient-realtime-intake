@@ -143,7 +143,7 @@ This phase de-risks Supabase and Vercel before the full UI is built.
   - five seconds without activity, hidden document, or window blur -> `inactive`;
   - valid submit -> `submitted`.
 - [ ] Show inline errors on blur or submit.
-- [ ] Show a visible `Demo only - do not enter real patient information` notice.
+- [ ] Show a visible `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.` notice.
 - [ ] Provide success feedback after submission.
 - [ ] Implement one-column mobile layout and a clear desktop layout.
 

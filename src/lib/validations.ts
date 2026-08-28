@@ -118,7 +118,9 @@ export const patientFormSchema: z.ZodType<PatientFormData> = z.object({
   middleName: optionalNameSchema,
   lastName: nameSchema,
   dateOfBirth: dateOfBirthSchema,
-  gender: z.enum(["male", "female", "other", "prefer_not_to_say"]),
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"], {
+    error: "Select a gender",
+  }),
   phoneNumber: phoneNumberSchema,
   email: emailSchema,
   address: requiredTrimmedStringSchema,

@@ -1,5 +1,5 @@
 import { InvalidSession } from "@/components/common/invalid-session";
-import { PatientVerticalSlice } from "@/components/patient/patient-vertical-slice";
+import { PatientForm } from "@/components/patient/patient-form";
 import { getSessionId } from "@/lib/session";
 
 type PatientPageProps = {
@@ -15,5 +15,5 @@ export default async function PatientPage({ searchParams }: PatientPageProps) {
     return <InvalidSession role="Patient" />;
   }
 
-  return <PatientVerticalSlice sessionId={sessionId} />;
+  return <PatientForm key={sessionId} sessionId={sessionId} />;
 }

@@ -27,9 +27,8 @@ export function PatientVerticalSlice({ sessionId }: { sessionId: string }) {
         className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950"
         role="note"
       >
-        <strong>Demo only — do not enter real patient information.</strong>{" "}
-        Data is transmitted ephemerally and is not saved to a database or this
-        browser.
+        <strong>Demo only —</strong> Data is transmitted ephemerally and is not
+        saved to a database or this browser.
       </div>
 
       {syncError ? (

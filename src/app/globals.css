@@ -21,7 +21,9 @@ body {
 
 button,
 a,
-input {
+input,
+select,
+textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
