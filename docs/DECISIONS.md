@@ -1,142 +1,74 @@
-# Architecture Decision Records (ADR)
+# Architectural Decision Records (ADRs)
 
-> **Project:** Agnos Health - Real-Time Patient Intake & Staff Monitoring System  
-> **Purpose:** Record the decisions that affect implementation scope and explain their trade-offs.  
-> **Document Version:** 2.0.0
-
----
-
-## ADR 001: Next.js Active LTS with App Router and TypeScript
+## ADR 001: Next.js 16 App Router as the Web Framework
 
 ### Status
 Accepted
 
 ### Decision
-Initialize the project with `create-next-app@latest`, use the generated Next.js 16.x Active LTS version, App Router, React, TypeScript, ESLint, and Tailwind CSS. Pin the installed versions in the lockfile.
+Use Next.js 16 with the App Router, TypeScript, and Tailwind CSS. Use React 19 as provided by Next.js 16. Use the `next build --webpack` build command while running Node 24 locally to bypass native Turbopack binding issues.
 
 ### Rationale
-- Next.js is required by the assignment.
-- TypeScript provides explicit contracts for form data and real-time events.
-- App Router provides a straightforward route structure for `/patient` and `/staff`.
-
-### Trade-offs
-The application is primarily client-interactive, so the real-time form and dashboard require Client Components. Server Actions and advanced caching features are not necessary for the assignment.
-
-The decision does not rely on claims that previous supported Next.js versions are obsolete; it simply selects the current Active LTS version for a new project.
-
-### Phase 0 Implementation Note
-
-The project was scaffolded with Next.js 16.3.3. The checked-in production build
-script uses Next.js's supported `next build --webpack` fallback because the local
-validation environment prevents Turbopack's CSS transform worker from binding a
-loopback port. This does not change the App Router, React, TypeScript, Tailwind,
-or deployment architecture. The same build completed successfully on Vercel with
-Node.js 24 and was production-verified on August 28, 2026. Keep webpack for the
-P0 checkpoint; Turbopack can be re-evaluated later without blocking delivery.
+- Built-in file-based routing matches the required `/patient` and `/staff` URL structure.
+- Server Components handle server-side parameter parsing and invalid session gates cleanly.
+- Client Components (`"use client"`) scope the stateful real-time interactions to the interactive view components.
+- Tailwind CSS allows fast, consistent styling without CSS runtime overhead.
 
 ---
 
-## ADR 002: Supabase Realtime for Transport
+## ADR 002: Realtime-Only Transport via Supabase Realtime
 
 ### Status
 Accepted
 
-### Context
-The Patient and Staff interfaces must synchronize while deployed on Vercel. A persistent custom WebSocket server would require a separate long-running backend and deployment pipeline.
-
 ### Decision
-Use Supabase Realtime client-to-client Broadcast for form and lifecycle events, and Presence for connection tracking.
+Use Supabase Realtime exclusively as an ephemeral transport layer for Broadcast and Presence. Do not read or write to Supabase Database (Postgres tables).
 
 ### Rationale
-- Managed persistent real-time infrastructure keeps the implementation focused on front-end behavior.
-- Broadcast supports low-latency client messages without writing every change to a database.
-- Presence provides join, sync, and leave events for connection state.
-
-### Trade-offs
-- Client-side Broadcast is transient and does not automatically restore state for a late subscriber.
-- Public channels do not provide production-grade authorization.
-- The assignment must use fake/demo data and document that production would require authentication, private channels, and Realtime Authorization.
+- The assignment explicitly evaluates real-time synchronization between two ephemeral browser contexts.
+- No database tables or persistence are required by the requirements.
+- Removing database operations eliminates schema migrations, row-level security policy complexity, and storage overhead.
+- Ephemeral WebSocket transport satisfies the real-time requirements with sub-second latency.
 
 ---
 
-## ADR 003: Snapshot Handshake for Late Join and Reconnection
+## ADR 003: Monotonic Revisions for Out-of-Order Event Protection
 
 ### Status
 Accepted
 
-### Context
-If Staff opens or refreshes the dashboard after Patient has already entered data, previous client-side Broadcast messages are no longer available. Without recovery, Staff would display an incomplete form.
-
 ### Decision
-Add an application-level request/response handshake:
-
-1. Staff subscribes to the session channel.
-2. Staff broadcasts `SNAPSHOT_REQUEST` with a unique request ID.
-3. A connected Patient responds with `FORM_SNAPSHOT` containing current values, lifecycle status, and revision.
-4. Staff applies the snapshot, then continues applying later `FORM_PATCH` events.
-
-Patient submission sends `FORM_SUBMITTED` with the complete validated form so the final state cannot depend on a pending debounce timer.
+Every event emitted by the Patient client (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`) includes a monotonically increasing integer `revision` property generated using `Math.max(Date.now(), lastRevision + 1)`. The Staff client maintains a `latestRevision` ref and drops any incoming event where `event.revision <= latestRevision`.
 
 ### Rationale
-- Meets the late-join requirement without introducing a database.
-- Keeps the proof of concept focused and easy to explain.
-- Reuses the same mechanism after a Staff reconnection.
-
-### Limitations
-If Patient is disconnected before Staff requests a snapshot, there is no source from which to recover the missing state. If both clients refresh, the session state is lost. These are accepted assignment-demo limitations and must be stated in the README.
-
-### Alternatives Considered
-- **Persist every draft to PostgreSQL:** More durable, but adds schema design, RLS, retention, and privacy work outside the assignment scope.
-- **Supabase Broadcast Replay:** Replay applies to database-originated broadcasts on private channels, not the planned client-to-client Broadcast flow.
+- Real-time WebSocket messages and network delays can occasionally deliver packets out of order.
+- Generating revisions based on monotonic millisecond timestamps (`Math.max(Date.now(), lastRevision + 1)`) guarantees that when a Patient refreshes their page and starts entering new data, the new events carry a higher timestamp revision than the prior session, allowing Staff to seamlessly accept post-refresh updates without dropping them as stale events.
+- Monotonicity within the same millisecond is preserved by the `lastRevision + 1` fallback.
+- Snapshot requests increment the revision counter before replying, guaranteeing that snapshot data supersedes prior patches.
 
 ---
 
-## ADR 004: Separate Connection Presence from Patient Lifecycle
+## ADR 004: Dual-State Model (Presence vs. Patient Lifecycle)
 
 ### Status
 Accepted
 
-### Context
-Supabase Presence supports arbitrary custom payloads. The application could call `track({ status: "actively_filling" })`, `track({ status: "inactive" })`, or `track({ status: "submitted" })`, and other subscribed clients could read that state.
-
-Presence does not automatically detect browser focus, typing, an application-defined idle threshold, or successful form submission. Those signals still have to be produced by browser event handlers, an idle timer, and form validation. Presence only synchronizes the payload that the application publishes.
-
-Connection state and patient lifecycle also represent different dimensions. A Patient may be connected but inactive, or submitted and later disconnected.
-
 ### Decision
-Model two independent states:
+Maintain two distinct, orthogonal status concepts in the application:
 
-```typescript
-type ConnectionStatus = "connecting" | "connected" | "disconnected";
-type PatientStatus = "actively_filling" | "inactive" | "submitted";
-```
+1. **`ConnectionStatus`** (`"connecting" | "connected" | "disconnected"`):
+   - Managed via Supabase Realtime Presence.
+   - Represents physical WebSocket connectivity between the browser and the Supabase Realtime cluster.
 
-- Presence controls `ConnectionStatus` and is tracked once after subscription.
-- Browser focus/input/visibility handlers and the idle timer determine `PatientStatus` locally.
-- Broadcast `STATUS_CHANGED` synchronizes `PatientStatus` and is sent only on state transitions.
-- Presence leave may map a non-submitted Patient to inactive, but it must never overwrite a submitted state.
+2. **`PatientStatus`** (`"actively_filling" | "inactive" | "submitted"`):
+   - Managed via ephemeral Broadcast events (`STATUS_CHANGED`, `FORM_SNAPSHOT`, `FORM_SUBMITTED`).
+   - Represents the clinical/intake activity state of the patient.
+   - Transitioned to `"actively_filling"` on user input/focus.
+   - Transitioned to `"inactive"` after a 5-second idle timeout, window blur, or document hide.
+   - Transitioned to `"submitted"` upon valid form submission. Once `"submitted"`, status is immutable.
 
 ### Rationale
-- **Capability versus responsibility:** Presence is capable of carrying active/idle metadata, but the application—not Supabase—detects those states. Restricting Presence to connection metadata makes that responsibility explicit.
-- **Update characteristics:** Supabase documents Presence as slow-changing synchronized state and warns against frequent `track()` calls. Focus/blur/idle transitions can occur repeatedly, so Broadcast is a safer fit. See the [Supabase Presence guide](https://supabase.com/docs/guides/realtime/presence).
-- **Business-state lifetime:** A Presence entry is removed when its client leaves. `submitted` is a business result and must remain visible in the current Staff session after the Patient disconnects.
-- **Independent truth:** Staff may correctly display `connectionStatus: "disconnected"` and `patientStatus: "submitted"` at the same time.
-
-### Alternative Considered: Store Lifecycle in Presence
-
-This alternative is technically valid if the application:
-
-1. detects focus and idle locally;
-2. calls `track()` only when the status changes and throttles rapid transitions;
-3. distinguishes Patient and Staff presence keys; and
-4. stores the submitted result separately so it is not lost when Patient Presence leaves.
-
-It was rejected because step 4 already requires a separate business-state mechanism, while mixing both concepts into one Presence payload makes disconnect and submitted behavior harder to reason about.
-
-### Consequences
-
-- The application maintains two explicit status fields instead of one combined badge state.
-- Staff subscribes to both Presence events and Broadcast lifecycle events.
+- Decouples network connection drops (e.g., brief Wi-Fi blips) from user behavior (e.g., typing vs. idle).
 - Snapshot responses include the current `PatientStatus`, allowing a late-joining Staff client to recover it while Patient remains connected.
 - The UI can explain connection health separately from Patient progress.
 
@@ -146,9 +78,6 @@ It was rejected because step 4 already requires a separate business-state mechan
 
 ### Status
 Accepted
-
-### Context
-The assignment requires real-time synchronization but does not require history, durable storage, authentication, or draft recovery. The form contains personally identifiable information such as name, date of birth, phone, email, and address.
 
 ### Decision
 - Do not create a patient submissions table for the required implementation.
@@ -218,3 +147,29 @@ Before building the full form:
 
 ### Rationale
 The largest technical risk is the real-time and cloud configuration, not the static form layout. An early deployed vertical slice exposes credential, channel, and hosting problems while they are still cheap to fix.
+
+---
+
+## ADR 009: Isolated Supabase Client Instances per Synchronizer Hook
+
+### Status
+Accepted
+
+### Context
+In evaluator and demo workflows, reviewers frequently open `/patient` and `/staff` simultaneously in split-screen browser panes (e.g., Arc Split View, Chrome side-by-side tabs) or navigate rapidly between routes within the same JavaScript execution context.
+
+If `getSupabaseBrowserClient()` returns a module-level singleton instance, both `usePatientSync` and `useStaffSync` share the same `SupabaseClient`. When the second hook attempts to register event listeners (e.g., `channel.on("presence", ...)` or `channel.on("broadcast", ...)`) on a channel topic that the first hook has already subscribed to, the underlying Supabase Realtime SDK throws:
+```text
+Error: cannot add callbacks for realtime:<channel> after subscribe()
+```
+This unhandled error aborts the second hook's `useEffect`, permanently trapping Staff in a `disconnected` state, preventing presence synchronization, and blocking `SNAPSHOT_REQUEST` recovery.
+
+### Decision
+- `getSupabaseBrowserClient()` in `src/lib/supabase.ts` returns a fresh, independent `SupabaseClient` instance (`createClient(...)`) for each consumer hook.
+- Client instances are configured with `auth.persistSession: false` and `auth.autoRefreshToken: false` to remain lightweight and fully ephemeral.
+- Each synchronizer hook maintains full ownership of its own channel subscription lifecycle and cleans up its own channel on unmount without affecting other active hooks.
+
+### Rationale
+- Eliminates channel collisions and SDK listener registration errors in split-view, multi-tab, and fast-navigation scenarios.
+- Ensures total connection isolation between Patient and Staff roles.
+- Guarantees predictable channel creation, presence tracking, and snapshot recovery regardless of the reviewer's browser layout.

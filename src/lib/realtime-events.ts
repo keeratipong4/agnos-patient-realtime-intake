@@ -1,4 +1,6 @@
 import type {
+  EmergencyContact,
+  Gender,
   PatientFormData,
   PatientStatus,
 } from "@/types";
@@ -10,6 +12,28 @@ export const REALTIME_EVENT = {
   statusChanged: "STATUS_CHANGED",
   formSubmitted: "FORM_SUBMITTED",
 } as const;
+
+export const PATIENT_FORM_FIELDS: ReadonlyArray<keyof PatientFormData> = [
+  "firstName",
+  "middleName",
+  "lastName",
+  "dateOfBirth",
+  "gender",
+  "phoneNumber",
+  "email",
+  "address",
+  "preferredLanguage",
+  "nationality",
+  "emergencyContact",
+  "religion",
+];
+
+const VALID_GENDERS: ReadonlySet<string> = new Set([
+  "male",
+  "female",
+  "other",
+  "prefer_not_to_say",
+]);
 
 export type FormPatchPayload = {
   sessionId: string;
@@ -64,7 +88,137 @@ export type BroadcastEnvelope = {
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidRevision(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 0
+  );
+}
+
+function isPatientStatus(value: unknown): value is PatientStatus {
+  return (
+    typeof value === "string" &&
+    (value === "actively_filling" ||
+      value === "inactive" ||
+      value === "submitted")
+  );
+}
+
+function isValidChangedField(value: unknown): value is keyof PatientFormData {
+  return (
+    typeof value === "string" &&
+    PATIENT_FORM_FIELDS.includes(value as keyof PatientFormData)
+  );
+}
+
+function isValidGender(value: unknown): value is Gender {
+  return typeof value === "string" && VALID_GENDERS.has(value);
+}
+
+function isValidEmergencyContact(
+  value: unknown,
+): value is EmergencyContact | undefined {
+  if (value === undefined) {
+    return true;
+  }
+  if (!isObject(value)) {
+    return false;
+  }
+  const keys = Object.keys(value);
+  for (const key of keys) {
+    if (key !== "name" && key !== "relationship") {
+      return false;
+    }
+    const val = value[key];
+    if (val !== undefined && typeof val !== "string") {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isValidFieldValue<K extends keyof PatientFormData>(
+  field: K,
+  value: unknown,
+): boolean {
+  if (value === undefined) {
+    return true;
+  }
+  switch (field) {
+    case "firstName":
+    case "middleName":
+    case "lastName":
+    case "dateOfBirth":
+    case "phoneNumber":
+    case "email":
+    case "address":
+    case "preferredLanguage":
+    case "nationality":
+    case "religion":
+      return typeof value === "string";
+    case "gender":
+      return isValidGender(value);
+    case "emergencyContact":
+      return isValidEmergencyContact(value);
+    default:
+      return false;
+  }
+}
+
+export function isPartialPatientFormData(
+  value: unknown,
+): value is Partial<PatientFormData> {
+  if (!isObject(value)) {
+    return false;
+  }
+  const keys = Object.keys(value);
+  for (const key of keys) {
+    if (!PATIENT_FORM_FIELDS.includes(key as keyof PatientFormData)) {
+      return false;
+    }
+    if (
+      !isValidFieldValue(
+        key as keyof PatientFormData,
+        (value as Record<string, unknown>)[key],
+      )
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function isFullPatientFormData(
+  value: unknown,
+): value is PatientFormData {
+  if (!isObject(value)) {
+    return false;
+  }
+  const requiredFields: Array<keyof PatientFormData> = [
+    "firstName",
+    "lastName",
+    "dateOfBirth",
+    "gender",
+    "phoneNumber",
+    "email",
+    "address",
+    "preferredLanguage",
+    "nationality",
+  ];
+  for (const field of requiredFields) {
+    const val = (value as Record<string, unknown>)[field];
+    if (val === undefined || typeof val !== "string" || val.length === 0) {
+      if (field === "gender" && isValidGender(val)) {
+        continue;
+      }
+      return false;
+    }
+  }
+  return isPartialPatientFormData(value);
 }
 
 export function getFormPatchPayload(
@@ -75,13 +229,12 @@ export function getFormPatchPayload(
   if (
     !isObject(payload) ||
     typeof payload.sessionId !== "string" ||
+    payload.sessionId.length === 0 ||
+    !isValidChangedField(payload.changedField) ||
     !isObject(payload.patch) ||
-    (payload.patch.firstName !== undefined &&
-      typeof payload.patch.firstName !== "string") ||
-    payload.changedField !== "firstName" ||
-    typeof payload.revision !== "number" ||
-    !Number.isSafeInteger(payload.revision) ||
-    payload.revision < 0 ||
+    !(payload.changedField in payload.patch) ||
+    !isPartialPatientFormData(payload.patch) ||
+    !isValidRevision(payload.revision) ||
     typeof payload.sentAt !== "string"
   ) {
     return null;
@@ -98,7 +251,9 @@ export function getSnapshotRequestPayload(
   if (
     !isObject(payload) ||
     typeof payload.sessionId !== "string" ||
+    payload.sessionId.length === 0 ||
     typeof payload.requestId !== "string" ||
+    payload.requestId.length === 0 ||
     typeof payload.requestedAt !== "string"
   ) {
     return null;
@@ -115,20 +270,57 @@ export function getFormSnapshotPayload(
   if (
     !isObject(payload) ||
     typeof payload.sessionId !== "string" ||
+    payload.sessionId.length === 0 ||
     typeof payload.requestId !== "string" ||
+    payload.requestId.length === 0 ||
     !isObject(payload.formData) ||
-    (payload.formData.firstName !== undefined &&
-      typeof payload.formData.firstName !== "string") ||
-    !["actively_filling", "inactive", "submitted"].includes(
-      String(payload.patientStatus),
-    ) ||
-    typeof payload.revision !== "number" ||
-    !Number.isSafeInteger(payload.revision) ||
-    payload.revision < 0 ||
+    !isPartialPatientFormData(payload.formData) ||
+    !isPatientStatus(payload.patientStatus) ||
+    !isValidRevision(payload.revision) ||
     typeof payload.sentAt !== "string"
   ) {
     return null;
   }
 
   return payload as FormSnapshotPayload;
+}
+
+export function getStatusChangedPayload(
+  message: BroadcastEnvelope,
+): StatusChangedPayload | null {
+  const payload = message.payload;
+
+  if (
+    !isObject(payload) ||
+    typeof payload.sessionId !== "string" ||
+    payload.sessionId.length === 0 ||
+    !isPatientStatus(payload.patientStatus) ||
+    typeof payload.lastActivityAt !== "string" ||
+    !isValidRevision(payload.revision)
+  ) {
+    return null;
+  }
+
+  return payload as StatusChangedPayload;
+}
+
+export function getFormSubmittedPayload(
+  message: BroadcastEnvelope,
+): FormSubmittedPayload | null {
+  const payload = message.payload;
+
+  if (
+    !isObject(payload) ||
+    typeof payload.sessionId !== "string" ||
+    payload.sessionId.length === 0 ||
+    !isObject(payload.formData) ||
+    !isFullPatientFormData(payload.formData) ||
+    payload.patientStatus !== "submitted" ||
+    typeof payload.submittedAt !== "string" ||
+    !isValidRevision(payload.revision)
+  ) {
+    return null;
+  }
+
+  return payload as FormSubmittedPayload;
 }
