@@ -66,6 +66,11 @@ The authoritative project documents are in `docs/`:
 - `IMPLEMENTATION_PLAN.md`
 - `UI_UX_DESIGN.md`
 
+Operational handoff and delivery guidance:
+
+- `HANDOFF.md`
+- `docs/GIT_WORKFLOW.md`
+
 ## Deployment
 
 - Production: https://agnos-patient-realtime-intake.vercel.app
