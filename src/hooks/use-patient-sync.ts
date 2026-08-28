@@ -42,6 +42,11 @@ export type PatientSyncResult = {
   submitForm: (finalData: PatientFormData) => Promise<boolean>;
 };
 
+function getNextRevision(lastRevision: number): number {
+  const now = Date.now();
+  return now > lastRevision ? now : lastRevision + 1;
+}
+
 export function usePatientSync(
   sessionId: string,
   options?: UsePatientSyncOptions,
@@ -131,7 +136,8 @@ export function usePatientSync(
           return;
         }
 
-        const revision = ++revisionRef.current;
+        revisionRef.current = getNextRevision(revisionRef.current);
+        const revision = revisionRef.current;
         const snapshot: FormSnapshotPayload = {
           sessionId,
           requestId: request.requestId,
@@ -250,7 +256,8 @@ export function usePatientSync(
           return;
         }
 
-        const revision = ++revisionRef.current;
+        revisionRef.current = getNextRevision(revisionRef.current);
+        const revision = revisionRef.current;
         const patch: FormPatchPayload = {
           sessionId,
           patch: { ...pendingPatchRef.current },
@@ -303,7 +310,8 @@ export function usePatientSync(
         return;
       }
 
-      const revision = ++revisionRef.current;
+      revisionRef.current = getNextRevision(revisionRef.current);
+      const revision = revisionRef.current;
       const statusPayload: StatusChangedPayload = {
         sessionId,
         patientStatus: newStatus,
@@ -353,7 +361,8 @@ export function usePatientSync(
         return false;
       }
 
-      const revision = ++revisionRef.current;
+      revisionRef.current = getNextRevision(revisionRef.current);
+      const revision = revisionRef.current;
       const submittedPayload: FormSubmittedPayload = {
         sessionId,
         formData: finalData,

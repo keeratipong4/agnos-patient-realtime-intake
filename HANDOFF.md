@@ -57,14 +57,14 @@ use PR, CI, and Preview checks manually until that decision is revisited.
 
 Phase 0, Phase 1, Phase 2, and Phase 3 are complete. Local verification passed:
 
-- 60 Vitest unit tests across 4 test suites:
+- 61 Vitest unit tests across 4 test suites:
   - `src/lib/validations.test.ts` (13 tests)
   - `src/lib/realtime-events.test.ts` (24 tests)
   - `src/hooks/use-patient-sync.test.ts` (11 tests)
-  - `src/hooks/use-staff-sync.test.ts` (12 tests)
+  - `src/hooks/use-staff-sync.test.ts` (13 tests)
 - `usePatientSync` and `useStaffSync` protocol hooks:
   - Strict runtime payload validation across all fields and nested `emergencyContact` structures;
-  - Monotonically increasing revisions for all Patient events (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`);
+  - Monotonically increasing timestamp-based revisions (`Math.max(Date.now(), lastRevision + 1)`) for all Patient events (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`), allowing seamless updates after Patient page reloads;
   - Debounced `FORM_PATCH` broadcasting across all `PatientFormData` fields;
   - `SNAPSHOT_REQUEST` on subscribe / reconnect and `FORM_SNAPSHOT` recovery handshake with request ID validation;
   - Stale revision dropping on Staff across all event types (`revision <= latestRevision`);

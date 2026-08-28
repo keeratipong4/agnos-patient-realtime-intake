@@ -38,11 +38,12 @@ Use Supabase Realtime exclusively as an ephemeral transport layer for Broadcast 
 Accepted
 
 ### Decision
-Every event emitted by the Patient client (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`) includes an integer `revision` property that starts at 1 and increments with every state emission. The Staff client maintains a `latestRevision` ref and drops any incoming event where `event.revision <= latestRevision`.
+Every event emitted by the Patient client (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`) includes a monotonically increasing integer `revision` property generated using `Math.max(Date.now(), lastRevision + 1)`. The Staff client maintains a `latestRevision` ref and drops any incoming event where `event.revision <= latestRevision`.
 
 ### Rationale
 - Real-time WebSocket messages and network delays can occasionally deliver packets out of order.
-- A monotonic revision counter ensures that a stale patch never overwrites a newer field value on the Staff monitor.
+- Generating revisions based on monotonic millisecond timestamps (`Math.max(Date.now(), lastRevision + 1)`) guarantees that when a Patient refreshes their page and starts entering new data, the new events carry a higher timestamp revision than the prior session, allowing Staff to seamlessly accept post-refresh updates without dropping them as stale events.
+- Monotonicity within the same millisecond is preserved by the `lastRevision + 1` fallback.
 - Snapshot requests increment the revision counter before replying, guaranteeing that snapshot data supersedes prior patches.
 
 ---

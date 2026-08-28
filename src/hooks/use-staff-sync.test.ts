@@ -438,4 +438,42 @@ describe("useStaffSync hook and recovery behavior", () => {
 
     expect(result.current.formData.firstName).toBeUndefined();
   });
+
+  it("updates correctly when Patient refreshes and sends new patches with newer revisions", async () => {
+    const { result } = await renderHook(() => useStaffSync(sessionId));
+
+    await act(async () => {
+      mockChannel.triggerSubscribe("SUBSCRIBED");
+    });
+
+    // 1. Patient types before refresh
+    const initialPatch: FormPatchPayload = {
+      sessionId,
+      patch: { firstName: "ข้อความเดิม" },
+      changedField: "firstName",
+      revision: 1787910000000,
+      sentAt: new Date().toISOString(),
+    };
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.formPatch, initialPatch);
+    });
+
+    expect(result.current.formData.firstName).toBe("ข้อความเดิม");
+
+    // 2. Patient refreshes page (timestamp increases) and types new message
+    const postRefreshPatch: FormPatchPayload = {
+      sessionId,
+      patch: { firstName: "ข้อความใหม่หลังรีเฟรช" },
+      changedField: "firstName",
+      revision: 1787910005000,
+      sentAt: new Date().toISOString(),
+    };
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.formPatch, postRefreshPatch);
+    });
+
+    expect(result.current.formData.firstName).toBe("ข้อความใหม่หลังรีเฟรช");
+  });
 });

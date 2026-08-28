@@ -91,8 +91,10 @@ describe("usePatientSync hook and protocol behavior", () => {
       sessionId,
       patch: { firstName: "สมชาย" },
       changedField: "firstName",
-      revision: 1,
+      revision: expect.any(Number),
     });
+    const rev1 = (patchEventsAfter[0].payload as { revision: number }).revision;
+    expect(rev1).toBeGreaterThan(0);
 
     act(() => {
       result.current.patchField("lastName", "ใจดี");
@@ -110,8 +112,10 @@ describe("usePatientSync hook and protocol behavior", () => {
       sessionId,
       patch: { lastName: "ใจดี" },
       changedField: "lastName",
-      revision: 2,
+      revision: expect.any(Number),
     });
+    const rev2 = (patchEventsSecond[1].payload as { revision: number }).revision;
+    expect(rev2).toBeGreaterThan(rev1);
   });
 
   it("broadcasts STATUS_CHANGED only on actual lifecycle transitions", async () => {
@@ -134,8 +138,9 @@ describe("usePatientSync hook and protocol behavior", () => {
     expect(statusEvents1[0].payload).toMatchObject({
       sessionId,
       patientStatus: "actively_filling",
-      revision: 1,
+      revision: expect.any(Number),
     });
+    const rev1 = (statusEvents1[0].payload as { revision: number }).revision;
 
     act(() => {
       result.current.updatePatientStatus("actively_filling");
@@ -159,8 +164,10 @@ describe("usePatientSync hook and protocol behavior", () => {
     expect(statusEvents3[1].payload).toMatchObject({
       sessionId,
       patientStatus: "inactive",
-      revision: 2,
+      revision: expect.any(Number),
     });
+    const rev2 = (statusEvents3[1].payload as { revision: number }).revision;
+    expect(rev2).toBeGreaterThan(rev1);
   });
 
   it("responds to SNAPSHOT_REQUEST with current form data and status in FORM_SNAPSHOT", async () => {
