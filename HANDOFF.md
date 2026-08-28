@@ -21,10 +21,16 @@ this repository.
 
 ## Current State
 
-- Current working branch: `develop`.
+- Integration branch: `develop`; it was fast-forwarded through the latest
+  production release before this handoff update.
+- Next working branch: `feature/patient-schema`, created from the updated
+  `develop` branch for Phase 2.
 - GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake
   (`origin`, public, default branch `main`).
-- Production checkpoint on `main`: `088e793 feat: add verified realtime vertical slice`.
+- Production checkpoint on `main`: `621f2b0 Merge pull request #1 from
+  keeratipong4/develop`.
+- Phase 1 implementation checkpoint: `088e793 feat: add verified realtime
+  vertical slice`.
 - Foundation commit: `d4b7799 chore: scaffold Next.js application foundation`.
 - Production: https://agnos-patient-realtime-intake.vercel.app
 - Vercel project: `keeratipong-boonnapongkasems-projects/agnos-patient-realtime-intake`.
@@ -40,6 +46,12 @@ The following Vercel environments have the two browser-safe Supabase variables:
 Production, Preview, and Development. Never print their values or add
 `.env.local`/`.vercel` to Git. Never use a Supabase secret or service-role key in
 the frontend.
+
+GitHub PR #1 established the documented development workflow and CI. It was
+merged to `main` with a release merge commit. The resulting `quality` workflow
+run passed, Vercel reported a successful production deployment, and the stable
+production URL returned HTTP 200. Branch protection is not enabled; continue to
+use PR, CI, and Preview checks manually until that decision is revisited.
 
 ## Completed and Verified
 
@@ -89,6 +101,8 @@ Follow `docs/GIT_WORKFLOW.md`:
 - Squash feature PRs into `develop`.
 - Release through a reviewed PR from `develop` to `main` after Vercel Preview,
   lint, tests, and build pass.
+- Branch protection is currently disabled; observe these gates manually and do
+  not push directly to `main`.
 - Never force-push `main` or `develop`.
 - Do not push or connect external resources without explicit user confirmation.
 
@@ -99,14 +113,15 @@ Continue the Agnos assignment in:
 /Users/keeratipong/Desktop/Dev works/agnos-assignment/agnos-patient-realtime-intake
 
 Read AGENTS.md, HANDOFF.md, docs/GIT_WORKFLOW.md, and all five authoritative
-documents before editing. Verify git status and work on develop or a feature
-branch, never directly on main. Phase 0 and the Phase 1 production realtime
-vertical slice are complete at https://agnos-patient-realtime-intake.vercel.app.
-Start Phase 2 data contracts and Zod validation test-first. Preserve the P0
-scope: no database, browser persistence, real patient data, auth, /demo, or
-multi-patient dashboard. Run lint, configured tests, and production build, then
-report changes and blockers. Do not push or create external resources without
-my explicit confirmation.
+documents before editing. Verify git status and use feature/patient-schema,
+created from develop; never work directly on main. Phase 0 and the Phase 1
+production realtime vertical slice are complete at
+https://agnos-patient-realtime-intake.vercel.app. Production checkpoint 621f2b0
+has passed GitHub CI and Vercel verification. Start Phase 2 data contracts and
+Zod validation test-first. Preserve the P0 scope: no database, browser
+persistence, real patient data, auth, /demo, or multi-patient dashboard. Run
+lint, configured tests, and production build, then report changes and blockers.
+Do not push or create external resources without my explicit confirmation.
 ```
 
 ## Verification Commands
