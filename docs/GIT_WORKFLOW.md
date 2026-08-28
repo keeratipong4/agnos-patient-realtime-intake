@@ -79,10 +79,16 @@ Preview. Re-run the Patient/Staff production smoke test for every release.
 
 ## GitHub Repository Settings
 
-Recommended initial visibility: Private. It can be made public deliberately when
-submission requirements and confidential-material checks are complete.
+The repository is public:
+https://github.com/keeratipong4/agnos-patient-realtime-intake. Keep confidential
+assignment material, credentials, environment files, and real patient
+information out of every commit and branch.
 
-If the GitHub plan supports branch protection for this private repository:
+Branch protection is not currently enabled. Until it is enabled, follow the PR,
+CI, and Preview gates in this document manually and do not push directly to
+`main`.
+
+If branch protection is enabled later:
 
 - Protect `main`: require a pull request, successful CI, resolved conversations,
   and block force pushes/deletion.

@@ -82,46 +82,54 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 ## Phase 2: Data Contracts and Validation (1-1.5 hours)
 
-- [ ] Define `PatientFormData`, `PatientStatus`, `ConnectionStatus`, and all event payload types.
-- [ ] Define event names in one shared module:
+> **Completed locally August 28, 2026:** Vitest now covers the public Patient
+> schema, and the schema output is statically tied to `PatientFormData`.
+
+- [x] Define `PatientFormData`, `PatientStatus`, `ConnectionStatus`, and all event payload types.
+- [x] Define event names in one shared module:
   - `FORM_PATCH`
   - `SNAPSHOT_REQUEST`
   - `FORM_SNAPSHOT`
   - `STATUS_CHANGED`
   - `FORM_SUBMITTED`
-- [ ] Create a Zod schema with the assignment fields.
-- [ ] Implement Unicode-friendly name validation using trim and length rules rather than an ASCII-only alphabetic regex.
-- [ ] Validate date of birth as a valid past date.
-- [ ] Validate phone and email formats with clear error messages.
-- [ ] Make Emergency Contact optional as a group:
+- [x] Create a Zod schema with the assignment fields.
+- [x] Implement Unicode-friendly name validation using trim and length rules rather than an ASCII-only alphabetic regex.
+- [x] Validate date of birth as a valid past date.
+- [x] Validate phone and email formats with clear error messages.
+- [x] Make Emergency Contact optional as a group:
   - both Name and Relationship may be empty;
   - if either is entered, require the other.
-- [ ] Add focused schema tests for required fields, valid optional fields, Thai/Unicode names, and Emergency Contact cross-field validation.
+- [x] Add focused schema tests for required fields, valid optional fields, Thai/Unicode names, and Emergency Contact cross-field validation.
 
 ### Exit Criteria
-- [ ] All original assignment fields exist in the schema.
-- [ ] Valid Thai and international names are accepted.
-- [ ] Invalid email, phone, future DOB, and partial Emergency Contact are rejected.
+- [x] All original assignment fields exist in the schema.
+- [x] Valid Thai and international names are accepted.
+- [x] Invalid email, phone, future DOB, and partial Emergency Contact are rejected.
 
 ---
 
 ## Phase 3: Real-Time Protocol and Recovery (1.5-2.5 hours)
 
-- [ ] Implement `usePatientSync` and `useStaffSync`.
-- [ ] Add a monotonically increasing revision to Patient events.
-- [ ] Broadcast debounced `FORM_PATCH` events after field changes.
-- [ ] Staff broadcasts `SNAPSHOT_REQUEST` immediately after subscribe and reconnect.
-- [ ] Patient responds with `FORM_SNAPSHOT` containing current values, status, and revision.
-- [ ] Staff ignores events older than the latest applied revision.
-- [ ] Implement `STATUS_CHANGED` only when patient lifecycle transitions.
-- [ ] Keep Presence limited to connection tracking; do not update Presence on each keystroke.
-- [ ] On valid submit, cancel or flush pending debounce work and send `FORM_SUBMITTED` with the complete final form.
+> **Completed locally August 28, 2026:** `usePatientSync` and `useStaffSync`
+> are implemented and verified test-first with 59 passing unit tests across
+> strict runtime payload contracts, recovery handshake, monotonic revisions,
+> debounced patches, lifecycle transitions, session isolation, and submission locking.
+
+- [x] Implement `usePatientSync` and `useStaffSync`.
+- [x] Add a monotonically increasing revision to Patient events.
+- [x] Broadcast debounced `FORM_PATCH` events after field changes.
+- [x] Staff broadcasts `SNAPSHOT_REQUEST` immediately after subscribe and reconnect.
+- [x] Patient responds with `FORM_SNAPSHOT` containing current values, status, and revision.
+- [x] Staff ignores events older than the latest applied revision.
+- [x] Implement `STATUS_CHANGED` only when patient lifecycle transitions.
+- [x] Keep Presence limited to connection tracking; do not update Presence on each keystroke.
+- [x] On valid submit, cancel or flush pending debounce work and send `FORM_SUBMITTED` with the complete final form.
 
 ### Exit Criteria
-- [ ] Staff opened after Patient starts typing receives the full current snapshot.
-- [ ] Refreshing Staff while Patient remains connected restores current values.
-- [ ] A submitted state is not overwritten by a later Presence leave.
-- [ ] Pending field changes cannot be lost when Patient submits immediately after typing.
+- [x] Staff opened after Patient starts typing receives the full current snapshot.
+- [x] Refreshing Staff while Patient remains connected restores current values.
+- [x] A submitted state is not overwritten by a later Presence leave.
+- [x] Pending field changes cannot be lost when Patient submits immediately after typing.
 
 ---
 

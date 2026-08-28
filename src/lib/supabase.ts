@@ -1,7 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-let browserClient: SupabaseClient | null = null;
-
 export const REALTIME_CONFIG_ERROR =
   "Realtime is not configured. Add the browser-safe Supabase URL and publishable key to .env.local.";
 
@@ -21,13 +19,11 @@ export function getSupabaseBrowserClient(): SupabaseClient | null {
     return null;
   }
 
-  browserClient ??= createClient(url, publishableKey, {
+  return createClient(url, publishableKey, {
     auth: {
       autoRefreshToken: false,
       detectSessionInUrl: false,
       persistSession: false,
     },
   });
-
-  return browserClient;
 }
