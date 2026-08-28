@@ -3,8 +3,9 @@
 Real-time Patient and Staff intake assignment built with Next.js 16, TypeScript,
 Tailwind CSS, and Supabase Realtime. The current implementation is the Phase 1
 vertical slice: one temporary Patient input implements Broadcast, Presence, session
-isolation, and snapshot recovery before the full form is implemented. The deployed
-Phase 1 proof is available at
+isolation, and snapshot recovery before the full form is implemented. Phase 2 adds
+the complete Patient data/event contracts, Zod validation, and focused schema tests.
+The deployed production app still represents the Phase 1 proof and is available at
 [agnos-patient-realtime-intake.vercel.app](https://agnos-patient-realtime-intake.vercel.app).
 
 ## Local setup
@@ -39,11 +40,10 @@ handshake.
 ## Commands
 
 - `npm run dev` — start the development server.
+- `npm test` — run the focused Vitest schema suite once.
 - `npm run lint` — run ESLint.
 - `npm run build` — create the production build with Next.js's webpack fallback.
 - `npm run start` — serve the production build.
-
-No test runner is configured yet.
 
 ## Data and security boundary
 

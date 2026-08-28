@@ -1,6 +1,6 @@
 import type {
+  PatientFormData,
   PatientStatus,
-  VerticalSliceFormData,
 } from "@/types";
 
 export const REALTIME_EVENT = {
@@ -13,8 +13,8 @@ export const REALTIME_EVENT = {
 
 export type FormPatchPayload = {
   sessionId: string;
-  patch: Partial<VerticalSliceFormData>;
-  changedField: keyof VerticalSliceFormData;
+  patch: Partial<PatientFormData>;
+  changedField: keyof PatientFormData;
   revision: number;
   sentAt: string;
 };
@@ -28,11 +28,36 @@ export type SnapshotRequestPayload = {
 export type FormSnapshotPayload = {
   sessionId: string;
   requestId: string;
-  formData: Partial<VerticalSliceFormData>;
+  formData: Partial<PatientFormData>;
   patientStatus: PatientStatus;
   revision: number;
   sentAt: string;
 };
+
+export type StatusChangedPayload = {
+  sessionId: string;
+  patientStatus: PatientStatus;
+  lastActivityAt: string;
+  revision: number;
+};
+
+export type FormSubmittedPayload = {
+  sessionId: string;
+  formData: PatientFormData;
+  patientStatus: "submitted";
+  submittedAt: string;
+  revision: number;
+};
+
+export type RealtimeEventPayloadMap = {
+  [REALTIME_EVENT.formPatch]: FormPatchPayload;
+  [REALTIME_EVENT.snapshotRequest]: SnapshotRequestPayload;
+  [REALTIME_EVENT.formSnapshot]: FormSnapshotPayload;
+  [REALTIME_EVENT.statusChanged]: StatusChangedPayload;
+  [REALTIME_EVENT.formSubmitted]: FormSubmittedPayload;
+};
+
+export type RealtimeEventName = keyof RealtimeEventPayloadMap;
 
 export type BroadcastEnvelope = {
   payload?: unknown;

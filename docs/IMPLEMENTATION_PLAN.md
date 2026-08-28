@@ -82,26 +82,29 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 ## Phase 2: Data Contracts and Validation (1-1.5 hours)
 
-- [ ] Define `PatientFormData`, `PatientStatus`, `ConnectionStatus`, and all event payload types.
-- [ ] Define event names in one shared module:
+> **Completed locally August 28, 2026:** Vitest now covers the public Patient
+> schema, and the schema output is statically tied to `PatientFormData`.
+
+- [x] Define `PatientFormData`, `PatientStatus`, `ConnectionStatus`, and all event payload types.
+- [x] Define event names in one shared module:
   - `FORM_PATCH`
   - `SNAPSHOT_REQUEST`
   - `FORM_SNAPSHOT`
   - `STATUS_CHANGED`
   - `FORM_SUBMITTED`
-- [ ] Create a Zod schema with the assignment fields.
-- [ ] Implement Unicode-friendly name validation using trim and length rules rather than an ASCII-only alphabetic regex.
-- [ ] Validate date of birth as a valid past date.
-- [ ] Validate phone and email formats with clear error messages.
-- [ ] Make Emergency Contact optional as a group:
+- [x] Create a Zod schema with the assignment fields.
+- [x] Implement Unicode-friendly name validation using trim and length rules rather than an ASCII-only alphabetic regex.
+- [x] Validate date of birth as a valid past date.
+- [x] Validate phone and email formats with clear error messages.
+- [x] Make Emergency Contact optional as a group:
   - both Name and Relationship may be empty;
   - if either is entered, require the other.
-- [ ] Add focused schema tests for required fields, valid optional fields, Thai/Unicode names, and Emergency Contact cross-field validation.
+- [x] Add focused schema tests for required fields, valid optional fields, Thai/Unicode names, and Emergency Contact cross-field validation.
 
 ### Exit Criteria
-- [ ] All original assignment fields exist in the schema.
-- [ ] Valid Thai and international names are accepted.
-- [ ] Invalid email, phone, future DOB, and partial Emergency Contact are rejected.
+- [x] All original assignment fields exist in the schema.
+- [x] Valid Thai and international names are accepted.
+- [x] Invalid email, phone, future DOB, and partial Emergency Contact are rejected.
 
 ---
 

@@ -19,8 +19,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   validation environment.
 - `npm run start` serves the production build.
 - `npm run lint` runs ESLint over the repository.
-- There is no test runner configured yet. Do not claim tests have run until a
-  test script and test framework are present.
+- `npm test` runs the focused Vitest schema suite once.
 
 ## Verified structure
 
@@ -49,5 +48,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Do not start P2 features until P0 is deployed and verified in production.
 - The Phase 1 P0 checkpoint was deployed and verified on August 28, 2026 at
   `https://agnos-patient-realtime-intake.vercel.app`; Phase 2 may now begin.
+- Phase 2 data contracts, Zod validation, and focused schema tests are complete
+  locally on `feature/patient-schema`; Phase 3 protocol/recovery work is next.
 - Do not push, deploy, or create external resources without explicit user
   confirmation.

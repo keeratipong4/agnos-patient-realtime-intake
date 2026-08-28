@@ -24,7 +24,7 @@ this repository.
 - Integration branch: `develop`; it was fast-forwarded through the latest
   production release before this handoff update.
 - Next working branch: `feature/patient-schema`, created from the updated
-  `develop` branch for Phase 2.
+  `develop` branch and currently holding the uncommitted Phase 2 work.
 - GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake
   (`origin`, public, default branch `main`).
 - Production checkpoint on `main`: `621f2b0 Merge pull request #1 from
@@ -55,8 +55,10 @@ use PR, CI, and Preview checks manually until that decision is revisited.
 
 ## Completed and Verified
 
-Phase 0 and the Phase 1 real-time vertical slice are complete. Local and Vercel
-production checks passed for:
+Phase 0 and the Phase 1 real-time vertical slice are complete. Phase 2 data
+contracts and validation are complete locally on `feature/patient-schema` but
+have not been committed, pushed, or deployed. Local and Vercel production checks
+passed for Phase 1:
 
 - lint and the webpack production build;
 - secure UUID session generation and invalid UUID rejection;
@@ -68,27 +70,25 @@ production checks passed for:
 - cross-session isolation;
 - visible fake-data warning and ephemeral-data disclosure.
 
+Local Phase 2 checks passed for:
+
+- Vitest schema coverage (13 tests);
+- complete Patient form and real-time event payload contracts;
+- trimmed Unicode/grapheme-aware 1-100 character names;
+- required fields, email, Thai/E.164 phone, and past DOB validation;
+- optional Emergency Contact normalization and paired-field validation;
+- lint, TypeScript, and the webpack production build.
+
 Turbopack cannot bind its CSS worker port inside the Codex sandbox. This is an
 environment restriction, not an application failure. Keep `next build --webpack`
 for the P0 checkpoint. Vercel and local webpack builds pass.
 
 ## Immediate Next Work
 
-Start Phase 2 from `docs/IMPLEMENTATION_PLAN.md`. Do not jump directly to the
-full Patient form.
-
-1. Add a focused test runner suitable for TypeScript schema tests.
-2. Define the complete `PatientFormData`, event payloads, `PatientStatus`, and
-   `ConnectionStatus` contracts.
-3. Implement the Zod schema using trim plus Unicode-friendly length rules.
-4. Validate email, phone, and date of birth in the past.
-5. Implement optional Emergency Contact cross-field validation.
-6. Write tests for valid/invalid data, Thai/Unicode names, DOB, and partial
-   Emergency Contact.
-7. Run lint, tests, and production build before committing.
-
-After Phase 2, proceed to Phase 3 protocol/recovery, then the complete Patient
-form and Staff dashboard. P2 bonus features remain out of scope until all P0
+Review and commit the local Phase 2 change when ready, then start Phase 3 from
+`docs/IMPLEMENTATION_PLAN.md`: implement the complete protocol/recovery hooks,
+revision ordering, lifecycle events, and submission handling before building the
+complete Patient form. P2 bonus features remain out of scope until all P0
 acceptance checks pass on the final production implementation.
 
 ## Git Workflow
@@ -117,8 +117,9 @@ documents before editing. Verify git status and use feature/patient-schema,
 created from develop; never work directly on main. Phase 0 and the Phase 1
 production realtime vertical slice are complete at
 https://agnos-patient-realtime-intake.vercel.app. Production checkpoint 621f2b0
-has passed GitHub CI and Vercel verification. Start Phase 2 data contracts and
-Zod validation test-first. Preserve the P0 scope: no database, browser
+has passed GitHub CI and Vercel verification. Phase 2 data contracts, Zod
+validation, and Vitest coverage are complete locally on `feature/patient-schema`
+and await review/commit. Start Phase 3 protocol/recovery test-first. Preserve the P0 scope: no database, browser
 persistence, real patient data, auth, /demo, or multi-patient dashboard. Run
 lint, configured tests, and production build, then report changes and blockers.
 Do not push or create external resources without my explicit confirmation.
@@ -133,7 +134,6 @@ git status --short
 git branch --show-current
 npm ci
 npm run lint
+npm test
 npm run build
 ```
-
-There is no test script yet; Phase 2 should add one before claiming tests pass.
