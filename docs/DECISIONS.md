@@ -83,7 +83,7 @@ Accepted
 - Do not create a patient submissions table for the required implementation.
 - Do not store form values in `localStorage`, `sessionStorage`, cookies, or IndexedDB.
 - Hold draft data in React state and exchange it through ephemeral Broadcast events.
-- Display a prominent warning that the deployed application is a demo and must not receive real patient data.
+- Display the prominent notice `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.`
 
 ### Rationale
 - Avoids retaining PII without an explicit security and retention design.

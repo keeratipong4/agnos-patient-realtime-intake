@@ -44,7 +44,7 @@ A user-friendly, accessible, and responsive form allowing patients to input thei
 - **Client-side Form Validation:** Real-time feedback with clear error messages using schema validation (e.g., Zod).
 - **Activity State Tracking:** Detects user engagement (typing, field focus, field blur, idle state).
 - **Submission Flow:** Submit button with confirmation feedback and success state.
-- **Demo Data Notice:** The deployed assignment is a demonstration system and must warn reviewers not to enter real patient information.
+- **Demo Data Notice:** The deployed assignment must display `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.`
 
 ---
 

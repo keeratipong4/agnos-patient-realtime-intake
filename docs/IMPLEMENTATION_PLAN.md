@@ -135,23 +135,29 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 ## Phase 4: Patient Form (2-3 hours)
 
-- [ ] Build accessible sections for Personal, Contact, and Emergency Contact information.
-- [ ] Integrate React Hook Form and Zod resolver.
-- [ ] Broadcast form changes through a scoped subscription without forcing a full form re-render for every keystroke.
-- [ ] Implement the five-second idle timer:
+> **Completed locally August 29, 2026:** The full Patient form, scoped field
+> broadcasting, activity tracker, accessible validation, submission lock, and
+> simplified single-action session launcher pass 71 tests, lint, and production build.
+
+- [x] Build accessible sections for Personal, Contact, and Emergency Contact information.
+- [x] Integrate React Hook Form and Zod resolver.
+- [x] Broadcast form changes through a scoped subscription without forcing a full form re-render for every keystroke.
+- [x] Implement the five-second idle timer:
   - input/focus -> `actively_filling`;
   - five seconds without activity, hidden document, or window blur -> `inactive`;
   - valid submit -> `submitted`.
-- [ ] Show inline errors on blur or submit.
-- [ ] Show a visible `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.` notice.
-- [ ] Provide success feedback after submission.
-- [ ] Implement one-column mobile layout and a clear desktop layout.
+- [x] Show inline errors on blur or submit.
+- [x] Show a visible `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.` notice.
+- [x] Provide success feedback after submission.
+- [x] Implement one-column mobile layout and a clear desktop layout.
+- [x] Simplify the landing page to one `Create new session` action before revealing the paired Patient and Staff links.
 
 ### Exit Criteria
-- [ ] Every field in the assignment is present.
-- [ ] Keyboard navigation and labels work.
-- [ ] Optional fields behave correctly.
-- [ ] Patient status transitions are observable in Staff.
+- [x] Every field in the authoritative `PatientFormData` contract is present.
+- [x] Keyboard navigation and labels work.
+- [x] Optional fields behave correctly.
+- [x] Patient status transitions are broadcast and recovered by the Phase 3 Staff synchronizer.
+- [ ] Patient status transitions are visible in the Staff UI (completed in Phase 5).
 
 ---
 

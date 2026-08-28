@@ -1,11 +1,11 @@
 # Agnos Patient Realtime Intake
 
 Real-time Patient and Staff intake assignment built with Next.js 16, TypeScript,
-Tailwind CSS, and Supabase Realtime. The current implementation is the Phase 1
-vertical slice: one temporary Patient input implements Broadcast, Presence, session
-isolation, and snapshot recovery before the full form is implemented. Phase 2 adds
-the complete Patient data/event contracts, Zod validation, and focused schema tests.
-The deployed production app still represents the Phase 1 proof and is available at
+Tailwind CSS, React Hook Form, Zod, and Supabase Realtime. The current feature
+branch includes the complete Phase 4 Patient intake form, scoped real-time field
+broadcasting, five-second activity tracking, inline validation, submission locking,
+and a single-action session launcher. The deployed production app currently
+represents the Phase 3 realtime protocol release and is available at
 [agnos-patient-realtime-intake.vercel.app](https://agnos-patient-realtime-intake.vercel.app).
 
 ## Local setup
@@ -32,15 +32,15 @@ Never use a Supabase secret or service-role key. Then start the app:
 npm run dev
 ```
 
-Open `http://localhost:3000`, create a session, and open its Patient and Staff
-links in separate browser contexts. Type fake data in Patient and confirm that it
-appears in Staff. Refresh Staff while Patient stays open to exercise the snapshot
-handshake.
+Open `http://localhost:3000` and select **Create new session**. The same launcher
+then reveals Patient and Staff links paired to one UUID. Open the links in separate
+browser contexts, enter fake data in Patient, and confirm that it appears in Staff.
+Refresh Staff while Patient stays open to exercise the snapshot handshake.
 
 ## Commands
 
 - `npm run dev` — start the development server.
-- `npm test` — run the focused Vitest schema suite once.
+- `npm test` — run the complete Vitest unit and component suite once.
 - `npm run lint` — run ESLint.
 - `npm run build` — create the production build with Next.js's webpack fallback.
 - `npm run start` — serve the production build.

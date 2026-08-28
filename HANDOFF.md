@@ -21,8 +21,10 @@ this repository.
 
 ## Current State
 
-- Integration branch: `develop`; it is fast-forwarded and in exact sync with `main` at `5896cf4`.
-- Production branch: `main`; release commit `5896cf4 release: v0.3.0 - realtime synchronization protocol, recovery, and client isolation (Phase 3)`.
+- Local `develop` and `main` may contain reviewed fast-forward changes that have not been pushed; verify their exact tips with `git branch -vv` before continuing.
+- Remote production/integration release: `5896cf4 release: v0.3.0 - realtime synchronization protocol, recovery, and client isolation (Phase 3)`.
+- Active branch: `feature/patient-form`; Patient Form checkpoint `a8f7158 feat: build patient intake form` is pushed to `origin/feature/patient-form`.
+- Follow-up work on the same branch adds the single-action Landing redesign, launcher tests, and synchronized documentation updates.
 - GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake (`origin`, public, default branch `main`).
 - Production URL: https://agnos-patient-realtime-intake.vercel.app
 - Vercel project: `keeratipong-boonnapongkasems-projects/agnos-patient-realtime-intake`.
@@ -39,13 +41,15 @@ the frontend.
 
 ## Completed and Verified
 
-Phase 0, Phase 1, Phase 2, and Phase 3 are complete and merged into `main` and `develop`. Local and CI verification passed:
+Phase 0, Phase 1, Phase 2, and Phase 3 are complete and merged into `main` and `develop`. Phase 4 is complete on `feature/patient-form`. Local verification passes:
 
-- 61 Vitest unit tests across 4 test suites:
+- 71 Vitest unit and component tests across 6 test suites:
   - `src/lib/validations.test.ts` (13 tests)
   - `src/lib/realtime-events.test.ts` (24 tests)
   - `src/hooks/use-patient-sync.test.ts` (11 tests)
   - `src/hooks/use-staff-sync.test.ts` (13 tests)
+  - `src/components/patient/patient-form.test.tsx` (8 tests)
+  - `src/components/session-launcher.test.tsx` (2 tests)
 - `usePatientSync` and `useStaffSync` protocol hooks:
   - Strict runtime payload validation across all fields and nested `emergencyContact` structures;
   - Monotonically increasing timestamp-based revisions (`Math.max(Date.now(), lastRevision + 1)`) for all Patient events (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`), allowing seamless updates after Patient page reloads (ADR 003);
@@ -59,15 +63,20 @@ Phase 0, Phase 1, Phase 2, and Phase 3 are complete and merged into `main` and `
   - Session isolation: pure derived state during render and proper channel/timer cleanup on session changes and unmount;
   - Client isolation (ADR 009): independent `SupabaseClient` instances per hook to prevent channel collisions in split-view/multi-tab environments;
 - Backward compatibility: `usePatientVerticalSlice` and `useStaffVerticalSlice` delegated cleanly to the new protocol hooks;
+- Complete React Hook Form + Zod Patient UI across all authoritative `PatientFormData` fields;
+- Independent `useWatch` broadcasters that update one top-level field at a time without a root-form value subscription;
+- Five-second idle tracking with window blur and hidden-document inactivity transitions;
+- Accessible blur/submit errors, mutually dependent Emergency Contact feedback, normalized submission, and immutable `Submission Confirmed` UI;
+- Responsive one-card Landing flow with one pre-session `Create new session` action, followed by paired Patient/Staff links for the same UUID;
 - ESLint (0 errors, 0 warnings);
 - Production build (`next build --webpack`).
 
 ## Immediate Next Work
 
-Start Phase 4 from `docs/IMPLEMENTATION_PLAN.md`: implement the full Patient
-intake form using React Hook Form, Zod validation, scoped field subscriptions,
-idle tracking (5s idle / blur / hidden visibility), inline error feedback, and
-responsive layout on branch `feature/patient-form`.
+Complete Phase 4 through the documented PR/Preview workflow. Local fast-forward
+merges do not authorize pushing `develop` or `main`. After Phase 4 is integrated
+and released, start Phase 5 Staff Monitoring UI from a fresh
+`feature/staff-monitor` branch based on `develop`.
 
 ## Git Workflow
 
@@ -92,16 +101,16 @@ Continue the Agnos assignment in:
 
 Read AGENTS.md, HANDOFF.md, docs/GIT_WORKFLOW.md, and all five authoritative
 documents before editing. Verify git status, update develop with a fast-forward,
-then create and use feature/patient-form; never work directly on main.
-Phase 0, Phase 1, Phase 2, and Phase 3 (protocol/recovery/client-isolation) are
-complete and merged into main and develop at release checkpoint 5896cf4 (v0.3.0).
-Vitest suite passes with 61 unit tests. Production URL:
-https://agnos-patient-realtime-intake.vercel.app. Start Phase 4: full Patient intake
-form with React Hook Form, Zod validation, scoped field subscriptions, 5s idle tracker,
-and submission confirmation. Preserve the P0 scope: no database, browser
-persistence, real patient data, auth, /demo, or multi-patient dashboard. Run
-lint, configured tests, and production build, then report changes and blockers.
-Do not push or create external resources without my explicit confirmation.
+and never work directly on main. Phase 0 through Phase 3 are released at v0.3.0.
+Phase 4 Patient Form UI is complete on feature/patient-form, including React Hook
+Form + Zod, scoped broadcasting, five-second activity tracking, accessible errors,
+submission locking, and a single-action Landing launcher. The suite passes with 71
+tests. Production remains on the Phase 3 release at
+https://agnos-patient-realtime-intake.vercel.app. Review the Phase 4 working tree,
+then integrate it before starting Phase 5 Staff Monitoring UI. Preserve the P0
+scope: no database, browser persistence, real patient data, auth, /demo, or
+multi-patient dashboard. Run lint, tests, and build, then report changes and
+blockers. Do not push or create external resources without my explicit confirmation.
 ```
 
 ## Verification Commands

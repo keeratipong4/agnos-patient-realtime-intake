@@ -1,7 +1,7 @@
 # System Architecture & Real-Time Data Flow
 
 > **Project:** Agnos Health - Real-Time Patient Intake & Staff Monitoring System  
-> **Document Version:** 2.0.0  
+> **Document Version:** 2.1.0
 > **Target Cloud Host:** Vercel (Next.js application) + Supabase Realtime (Broadcast and Presence)  
 > **Data Strategy:** Ephemeral demo data only; no browser or database persistence in the submission scope
 
@@ -53,7 +53,10 @@ flowchart LR
 
 ## 2. Session and Route Model
 
-Each demonstration session uses a cryptographically random UUID. The landing page creates one session and presents two links:
+Each demonstration session uses a cryptographically random UUID. Before a session
+exists, the landing page presents one primary action: `Create new session`. After
+that action creates the UUID, the same launcher surface reveals the two synchronized
+role links:
 
 ```text
 /patient?session=<uuid>
@@ -68,7 +71,7 @@ patient-session-<uuid>
 
 The application validates the session query parameter before joining a channel. A missing or invalid session ID shows an error and a link to create a new session.
 
-This assignment uses a public Supabase channel with an unguessable UUID to minimize setup time. The deployed UI must state that it is a demo and that reviewers must not enter real patient information. A production implementation would add authentication, private channels, and Realtime Authorization policies.
+This assignment uses a public Supabase channel with an unguessable UUID to minimize setup time. The deployed UI states `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.` A production implementation would add authentication, private channels, and Realtime Authorization policies.
 
 ---
 
@@ -251,50 +254,56 @@ If the Patient is not connected when Staff requests a snapshot, Staff retains an
 src/
 ├── app/
 │   ├── layout.tsx
-│   ├── page.tsx                    # Create session and show role links
+│   ├── page.tsx                    # Render the single-action session launcher
 │   ├── patient/page.tsx
 │   └── staff/page.tsx
 ├── components/
-│   ├── common/                     # Button, Input, Select, Badge, Card
+│   ├── session-launcher.tsx        # Create one UUID, then reveal paired role links
+│   ├── common/
+│   │   ├── invalid-session.tsx
+│   │   └── status-badge.tsx
 │   ├── patient/
 │   │   ├── patient-form.tsx
-│   │   └── form-section.tsx
+│   │   ├── patient-field-sync.tsx
+│   │   ├── form-section.tsx
+│   │   └── patient-vertical-slice.tsx  # Phase 1 compatibility adapter
 │   └── staff/
-│       ├── staff-dashboard.tsx
-│       ├── status-indicators.tsx
-│       └── live-field-row.tsx
+│       └── staff-vertical-slice.tsx    # Replaced by the Phase 5 dashboard
 ├── hooks/
 │   ├── use-patient-sync.ts
 │   ├── use-staff-sync.ts
-│   └── use-idle-tracker.ts
+│   ├── use-idle-tracker.ts
+│   ├── use-patient-vertical-slice.ts
+│   └── use-staff-vertical-slice.ts
 ├── lib/
 │   ├── supabase.ts
 │   ├── realtime-events.ts
 │   ├── session.ts
-│   ├── validations.ts
-│   └── utils.ts
+│   └── validations.ts
 └── types/
     └── index.ts
 ```
 
 The form subscription used for broadcasting should not force a root form re-render on every keystroke. Use a scoped React Hook Form subscription, and clean up debounced callbacks and Supabase channels on unmount.
 
-### Phase 1 Implementation Status — Completed August 28, 2026
+### Phase 4 Implementation Status — Completed Locally August 29, 2026
 
-The current repository stops at the required real-time vertical slice. It uses a
-temporary `firstName` input with `usePatientVerticalSlice` and
-`useStaffVerticalSlice` to implement UUID channel isolation, debounced
-`FORM_PATCH`, Patient Presence, and the `SNAPSHOT_REQUEST` / `FORM_SNAPSHOT`
-handshake. The shared event module reserves the remaining P0 event names, but
-Patient lifecycle transitions, `STATUS_CHANGED`, `FORM_SUBMITTED`, the complete
-form schema, and the final component names shown above are intentionally not yet
-wired. The vertical slice is deployed at
-`https://agnos-patient-realtime-intake.vercel.app` and has passed production
-checks for invalid UUID rejection, Unicode `FORM_PATCH` delivery, reconnect
-snapshot recovery, Patient Presence leave, and cross-session isolation. The
-Supabase project currently runs in `ap-northeast-2` (Seoul); this is accepted for
-the assignment demo because P0 correctness and deployment take priority over
-regional latency optimization.
+The feature branch implements the complete Patient form with React Hook Form and
+the shared Zod schema. Independent `useWatch` subscriptions broadcast all twelve
+top-level `PatientFormData` fields without observing the entire form from its root.
+The browser activity tracker transitions to `actively_filling` on interaction and
+to `inactive` after five seconds, window blur, or a hidden document. Valid submit
+events send the normalized final payload and lock the Patient UI in a visible
+`Submission Confirmed` state.
+
+The landing page now uses one pre-session action instead of presenting Patient and
+Staff as independent cards. After UUID creation, one shared result surface explains
+that the Patient and Staff links are synchronized views of the same session.
+
+Production remains on the Phase 3 v0.3.0 release until the Phase 4 branch passes
+Preview review and the documented release workflow. The Supabase project currently
+runs in `ap-northeast-2` (Seoul); this is accepted for the assignment demo because
+P0 correctness and deployment take priority over regional latency optimization.
 
 ---
 
@@ -303,7 +312,7 @@ regional latency optimization.
 - Use only the Supabase publishable client key in browser code; never expose a secret or service-role key.
 - Do not store form values in `localStorage`, `sessionStorage`, cookies, or a database for the required submission.
 - Do not log form payloads in production.
-- Show a visible demo-data warning on the Patient route.
+- Show the visible ephemeral demo-data notice on the Landing and Patient routes.
 - Use an unguessable session UUID and validate it before channel subscription.
 - Document public-channel and non-persistence limitations in the README.
 - Production hardening would require authentication, private channels, RLS policies, audit logging, encryption, and an explicit retention policy.

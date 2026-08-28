@@ -1,7 +1,7 @@
 # UI/UX Design System & Responsive Strategy
 
 > **Project:** Agnos Health - Real-Time Patient Intake & Staff Monitoring System  
-> **Document Version:** 1.1.0  
+> **Document Version:** 1.2.0
 > **Target Audience:** Reviewers, Evaluators, and Frontend Developers
 
 ---
@@ -54,7 +54,21 @@ The application embraces a **Clean, Modern HealthTech aesthetic** inspired by Ag
 
 ---
 
-## 4. Patient Form UX Design Details
+## 4. Landing Page UX Design Details
+
+1. **One Initial Action:** Before a session exists, the page shows one centered
+   `Create new session` action. Patient and Staff are not presented as independent
+   feature cards.
+2. **Progressive Disclosure:** After UUID creation, the same card changes to a
+   `Session ready` state and reveals the paired Patient and Staff links.
+3. **Shared-Session Explanation:** Supporting text states that both links are two
+   synchronized views of the same session. The UUID appears once as shared context.
+4. **Responsive Focus:** The single card stays centered at every breakpoint; paired
+   role links stack on mobile and share one row on wider screens.
+
+---
+
+## 5. Patient Form UX Design Details
 
 1. **Logical Sectioning:**
    - **Section 1: Personal Identification** (First, Middle, Last Name, DOB, Gender, Nationality, Religion).
@@ -62,11 +76,11 @@ The application embraces a **Clean, Modern HealthTech aesthetic** inspired by Ag
    - **Section 3: Emergency Contact (Optional)** (Contact Name, Relationship dropdown).
 2. **Inline Real-Time Validation:** Error messages appear on blur or submit attempt with red accent borders (`border-red-500`) and clear, human-readable helper text.
 3. **Conditional Emergency Contact Validation:** Both Emergency Contact fields may remain blank, but completing either one requires the other.
-4. **Demo Data Warning:** A visible notice tells reviewers not to enter real patient information because the assignment deployment has no production privacy controls.
+4. **Demo Notice:** A visible notice reads `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.`
 
 ---
 
-## 5. Staff Monitoring View UX Design Details
+## 6. Staff Monitoring View UX Design Details
 
 1. **Prominent Status Header:**
    - Displays Connection Health (`Connecting` / `Connected` / `Disconnected`) independently from Patient Status (`Active` / `Inactive` / `Submitted`) and the Session Code.
@@ -79,9 +93,11 @@ The application embraces a **Clean, Modern HealthTech aesthetic** inspired by Ag
 
 ---
 
-## 6. Accessibility and Evaluator Experience
+## 7. Accessibility and Evaluator Experience
 
-- The landing page generates paired Patient and Staff links for the same session and explains that they should be opened in separate tabs or windows.
+- The landing page exposes only one action before session creation, then generates
+  paired Patient and Staff links and explains that they are two views of the same
+  session to be opened in separate tabs or windows.
 - Every input has a visible label and associated validation message.
 - Keyboard focus remains visible throughout the form and dashboard.
 - Status is communicated using text and icons in addition to color.
