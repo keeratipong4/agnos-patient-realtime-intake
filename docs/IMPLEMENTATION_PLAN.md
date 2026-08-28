@@ -110,21 +110,26 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 ## Phase 3: Real-Time Protocol and Recovery (1.5-2.5 hours)
 
-- [ ] Implement `usePatientSync` and `useStaffSync`.
-- [ ] Add a monotonically increasing revision to Patient events.
-- [ ] Broadcast debounced `FORM_PATCH` events after field changes.
-- [ ] Staff broadcasts `SNAPSHOT_REQUEST` immediately after subscribe and reconnect.
-- [ ] Patient responds with `FORM_SNAPSHOT` containing current values, status, and revision.
-- [ ] Staff ignores events older than the latest applied revision.
-- [ ] Implement `STATUS_CHANGED` only when patient lifecycle transitions.
-- [ ] Keep Presence limited to connection tracking; do not update Presence on each keystroke.
-- [ ] On valid submit, cancel or flush pending debounce work and send `FORM_SUBMITTED` with the complete final form.
+> **Completed locally August 28, 2026:** `usePatientSync` and `useStaffSync`
+> are implemented and verified test-first with 59 passing unit tests across
+> strict runtime payload contracts, recovery handshake, monotonic revisions,
+> debounced patches, lifecycle transitions, session isolation, and submission locking.
+
+- [x] Implement `usePatientSync` and `useStaffSync`.
+- [x] Add a monotonically increasing revision to Patient events.
+- [x] Broadcast debounced `FORM_PATCH` events after field changes.
+- [x] Staff broadcasts `SNAPSHOT_REQUEST` immediately after subscribe and reconnect.
+- [x] Patient responds with `FORM_SNAPSHOT` containing current values, status, and revision.
+- [x] Staff ignores events older than the latest applied revision.
+- [x] Implement `STATUS_CHANGED` only when patient lifecycle transitions.
+- [x] Keep Presence limited to connection tracking; do not update Presence on each keystroke.
+- [x] On valid submit, cancel or flush pending debounce work and send `FORM_SUBMITTED` with the complete final form.
 
 ### Exit Criteria
-- [ ] Staff opened after Patient starts typing receives the full current snapshot.
-- [ ] Refreshing Staff while Patient remains connected restores current values.
-- [ ] A submitted state is not overwritten by a later Presence leave.
-- [ ] Pending field changes cannot be lost when Patient submits immediately after typing.
+- [x] Staff opened after Patient starts typing receives the full current snapshot.
+- [x] Refreshing Staff while Patient remains connected restores current values.
+- [x] A submitted state is not overwritten by a later Presence leave.
+- [x] Pending field changes cannot be lost when Patient submits immediately after typing.
 
 ---
 

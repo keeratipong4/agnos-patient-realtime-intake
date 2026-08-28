@@ -23,10 +23,8 @@ this repository.
 
 - Integration branch: `develop`; it was fast-forwarded through the latest
   production release before this handoff update.
-- Phase 2 commit: `32c2051 feat: add patient schema contracts and validation`,
-  fast-forwarded and pushed to `develop` on August 28, 2026.
-- Next working branch: create `feature/realtime-protocol` from the updated
-  `develop` branch for Phase 3.
+- Phase 2 commit: `32c2051 feat: add patient schema contracts and validation`.
+- Working branch: `feature/realtime-protocol` for Phase 3.
 - GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake
   (`origin`, public, default branch `main`).
 - Production checkpoint on `main`: `621f2b0 Merge pull request #1 from
@@ -57,42 +55,35 @@ use PR, CI, and Preview checks manually until that decision is revisited.
 
 ## Completed and Verified
 
-Phase 0 and the Phase 1 real-time vertical slice are complete. Phase 2 data
-contracts and validation are merged into `develop` at `32c2051` and pushed, but
-have not been released to `main` or verified in production. Local and Vercel
-production checks passed for Phase 1:
+Phase 0, Phase 1, Phase 2, and Phase 3 are complete. Local verification passed:
 
-- lint and the webpack production build;
-- secure UUID session generation and invalid UUID rejection;
-- Patient/Staff role routes;
-- debounced Unicode `FORM_PATCH` delivery;
-- Patient Presence join/leave;
-- Staff reconnect `SNAPSHOT_REQUEST` / Patient `FORM_SNAPSHOT` recovery;
-- revision ordering;
-- cross-session isolation;
-- visible fake-data warning and ephemeral-data disclosure.
-
-Local Phase 2 checks passed for:
-
-- Vitest schema coverage (13 tests);
-- complete Patient form and real-time event payload contracts;
-- trimmed Unicode/grapheme-aware 1-100 character names;
-- required fields, email, Thai/E.164 phone, and past DOB validation;
-- optional Emergency Contact normalization and paired-field validation;
-- lint, TypeScript, and the webpack production build.
-
-Turbopack cannot bind its CSS worker port inside the Codex sandbox. This is an
-environment restriction, not an application failure. Keep `next build --webpack`
-for the P0 checkpoint. Vercel and local webpack builds pass.
+- 60 Vitest unit tests across 4 test suites:
+  - `src/lib/validations.test.ts` (13 tests)
+  - `src/lib/realtime-events.test.ts` (24 tests)
+  - `src/hooks/use-patient-sync.test.ts` (11 tests)
+  - `src/hooks/use-staff-sync.test.ts` (12 tests)
+- `usePatientSync` and `useStaffSync` protocol hooks:
+  - Strict runtime payload validation across all fields and nested `emergencyContact` structures;
+  - Monotonically increasing revisions for all Patient events (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`);
+  - Debounced `FORM_PATCH` broadcasting across all `PatientFormData` fields;
+  - `SNAPSHOT_REQUEST` on subscribe / reconnect and `FORM_SNAPSHOT` recovery handshake with request ID validation;
+  - Stale revision dropping on Staff across all event types (`revision <= latestRevision`);
+  - `STATUS_CHANGED` emission only on actual lifecycle transitions (`actively_filling` / `inactive`), preventing bypass of full form validation;
+  - Presence restricted to Patient connection tracking;
+  - Form submission debounce cancellation and complete `FORM_SUBMITTED` payload;
+  - Submission state locking (post-submit patch/snapshot attempts and Presence leave cannot mutate data or revert `submitted` status);
+  - Session isolation: pure derived state during render and proper channel/timer cleanup on session changes and unmount;
+  - Client isolation (ADR 009): independent `SupabaseClient` instances per hook to prevent channel collisions in split-view/multi-tab environments;
+- Backward compatibility: `usePatientVerticalSlice` and `useStaffVerticalSlice` delegated cleanly to the new protocol hooks;
+- ESLint (0 errors, 0 warnings);
+- Production build (`next build --webpack`).
 
 ## Immediate Next Work
 
-Create `feature/realtime-protocol` from the updated `develop` branch, then start
-Phase 3 from `docs/IMPLEMENTATION_PLAN.md`: implement the complete
-protocol/recovery hooks, revision ordering, lifecycle events, and submission
-handling before building the complete Patient form. P2 bonus features remain out
-of scope until all P0 acceptance checks pass on the final production
-implementation.
+Start Phase 4 from `docs/IMPLEMENTATION_PLAN.md`: implement the full Patient
+intake form using React Hook Form, Zod validation, scoped field subscriptions,
+idle tracking (5s idle / blur / hidden visibility), inline error feedback, and
+responsive layout.
 
 ## Git Workflow
 
