@@ -1,6 +1,6 @@
 # Session Handoff
 
-Updated: August 28, 2026 (Asia/Bangkok)
+Updated: August 29, 2026 (Asia/Bangkok)
 
 ## Start Here
 
@@ -21,21 +21,11 @@ this repository.
 
 ## Current State
 
-- Integration branch: `develop`; it was fast-forwarded through the latest
-  production release before this handoff update.
-- Phase 2 commit: `32c2051 feat: add patient schema contracts and validation`.
-- Working branch: `feature/realtime-protocol` for Phase 3.
-- GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake
-  (`origin`, public, default branch `main`).
-- Production checkpoint on `main`: `621f2b0 Merge pull request #1 from
-  keeratipong4/develop`.
-- Phase 1 implementation checkpoint: `088e793 feat: add verified realtime
-  vertical slice`.
-- Foundation commit: `d4b7799 chore: scaffold Next.js application foundation`.
-- Production: https://agnos-patient-realtime-intake.vercel.app
+- Integration branch: `develop`; it is fast-forwarded and in exact sync with `main` at `5896cf4`.
+- Production branch: `main`; release commit `5896cf4 release: v0.3.0 - realtime synchronization protocol, recovery, and client isolation (Phase 3)`.
+- GitHub: https://github.com/keeratipong4/agnos-patient-realtime-intake (`origin`, public, default branch `main`).
+- Production URL: https://agnos-patient-realtime-intake.vercel.app
 - Vercel project: `keeratipong-boonnapongkasems-projects/agnos-patient-realtime-intake`.
-- The GitHub repository is connected to the existing Vercel project; `main` is
-  the production line and non-`main` branches are Preview deployments.
 - Supabase project ref: `kpigrftdqxsjggmxdjyr`.
 - Supabase primary region: `ap-northeast-2` (Seoul), accepted for P0.
 - Node.js: 24 LTS, pinned by `.nvmrc` and `package.json`.
@@ -47,15 +37,9 @@ Production, Preview, and Development. Never print their values or add
 `.env.local`/`.vercel` to Git. Never use a Supabase secret or service-role key in
 the frontend.
 
-GitHub PR #1 established the documented development workflow and CI. It was
-merged to `main` with a release merge commit. The resulting `quality` workflow
-run passed, Vercel reported a successful production deployment, and the stable
-production URL returned HTTP 200. Branch protection is not enabled; continue to
-use PR, CI, and Preview checks manually until that decision is revisited.
-
 ## Completed and Verified
 
-Phase 0, Phase 1, Phase 2, and Phase 3 are complete. Local verification passed:
+Phase 0, Phase 1, Phase 2, and Phase 3 are complete and merged into `main` and `develop`. Local and CI verification passed:
 
 - 61 Vitest unit tests across 4 test suites:
   - `src/lib/validations.test.ts` (13 tests)
@@ -64,7 +48,7 @@ Phase 0, Phase 1, Phase 2, and Phase 3 are complete. Local verification passed:
   - `src/hooks/use-staff-sync.test.ts` (13 tests)
 - `usePatientSync` and `useStaffSync` protocol hooks:
   - Strict runtime payload validation across all fields and nested `emergencyContact` structures;
-  - Monotonically increasing timestamp-based revisions (`Math.max(Date.now(), lastRevision + 1)`) for all Patient events (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`), allowing seamless updates after Patient page reloads;
+  - Monotonically increasing timestamp-based revisions (`Math.max(Date.now(), lastRevision + 1)`) for all Patient events (`FORM_PATCH`, `FORM_SNAPSHOT`, `STATUS_CHANGED`, `FORM_SUBMITTED`), allowing seamless updates after Patient page reloads (ADR 003);
   - Debounced `FORM_PATCH` broadcasting across all `PatientFormData` fields;
   - `SNAPSHOT_REQUEST` on subscribe / reconnect and `FORM_SNAPSHOT` recovery handshake with request ID validation;
   - Stale revision dropping on Staff across all event types (`revision <= latestRevision`);
@@ -83,7 +67,7 @@ Phase 0, Phase 1, Phase 2, and Phase 3 are complete. Local verification passed:
 Start Phase 4 from `docs/IMPLEMENTATION_PLAN.md`: implement the full Patient
 intake form using React Hook Form, Zod validation, scoped field subscriptions,
 idle tracking (5s idle / blur / hidden visibility), inline error feedback, and
-responsive layout.
+responsive layout on branch `feature/patient-form`.
 
 ## Git Workflow
 
@@ -108,13 +92,13 @@ Continue the Agnos assignment in:
 
 Read AGENTS.md, HANDOFF.md, docs/GIT_WORKFLOW.md, and all five authoritative
 documents before editing. Verify git status, update develop with a fast-forward,
-then create and use feature/realtime-protocol; never work directly on main.
-Phase 0 and the Phase 1
-production realtime vertical slice are complete at
-https://agnos-patient-realtime-intake.vercel.app. Production checkpoint 621f2b0
-has passed GitHub CI and Vercel verification. Phase 2 data contracts, Zod
-validation, and Vitest coverage are merged into develop at `32c2051`. Start
-Phase 3 protocol/recovery test-first. Preserve the P0 scope: no database, browser
+then create and use feature/patient-form; never work directly on main.
+Phase 0, Phase 1, Phase 2, and Phase 3 (protocol/recovery/client-isolation) are
+complete and merged into main and develop at release checkpoint 5896cf4 (v0.3.0).
+Vitest suite passes with 61 unit tests. Production URL:
+https://agnos-patient-realtime-intake.vercel.app. Start Phase 4: full Patient intake
+form with React Hook Form, Zod validation, scoped field subscriptions, 5s idle tracker,
+and submission confirmation. Preserve the P0 scope: no database, browser
 persistence, real patient data, auth, /demo, or multi-patient dashboard. Run
 lint, configured tests, and production build, then report changes and blockers.
 Do not push or create external resources without my explicit confirmation.
