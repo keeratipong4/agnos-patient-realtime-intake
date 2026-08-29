@@ -167,9 +167,11 @@ This unhandled error aborts the second hook's `useEffect`, permanently trapping 
 ### Decision
 - `getSupabaseBrowserClient()` in `src/lib/supabase.ts` returns a fresh, independent `SupabaseClient` instance (`createClient(...)`) for each consumer hook.
 - Client instances are configured with `auth.persistSession: false` and `auth.autoRefreshToken: false` to remain lightweight and fully ephemeral.
+- Each client receives a unique ephemeral auth storage key so separate GoTrue instances do not share the SDK's default project-level namespace. Persistence remains disabled, so the key does not add browser storage.
 - Each synchronizer hook maintains full ownership of its own channel subscription lifecycle and cleans up its own channel on unmount without affecting other active hooks.
 
 ### Rationale
 - Eliminates channel collisions and SDK listener registration errors in split-view, multi-tab, and fast-navigation scenarios.
+- Avoids GoTrue multi-instance warnings without weakening synchronizer isolation or introducing persisted auth state.
 - Ensures total connection isolation between Patient and Staff roles.
 - Guarantees predictable channel creation, presence tracking, and snapshot recovery regardless of the reviewer's browser layout.

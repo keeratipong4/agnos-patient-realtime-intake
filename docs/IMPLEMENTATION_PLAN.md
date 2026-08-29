@@ -164,7 +164,7 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 ## Phase 5: Staff Monitoring View (1.5-2.5 hours)
 
 > **Implemented locally August 29, 2026:** The complete Staff dashboard uses
-> `useStaffSync` directly and passes 79 total tests across 8 suites. Realtime
+> `useStaffSync` directly and passes 80 total tests across 9 suites. Realtime
 > browser QA passed across Chrome Patient and in-app-browser Staff contexts.
 
 - [x] Display Connection Status independently from Patient Status.

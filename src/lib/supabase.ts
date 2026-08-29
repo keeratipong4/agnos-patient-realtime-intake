@@ -24,6 +24,7 @@ export function getSupabaseBrowserClient(): SupabaseClient | null {
       autoRefreshToken: false,
       detectSessionInUrl: false,
       persistSession: false,
+      storageKey: `agnos-realtime-${globalThis.crypto.randomUUID()}`,
     },
   });
 }

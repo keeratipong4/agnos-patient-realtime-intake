@@ -17,7 +17,7 @@ assignment PDF as an implementation specification.
 ## Current State
 
 - Checked-out branch: `feature/staff-monitor`, created from local `develop` at
-  `98851ec`. Phase 5 changes are intentionally uncommitted pending approval.
+  `98851ec`. Phase 5 changes are committed on this branch.
 - Local `develop` points to `98851ec`; `origin/develop`, `main`, and
   `feature/patient-form` point to `9886d8a`.
 - Phase 0 through Phase 4 are integrated. Phase 5 Staff Monitoring UI is
@@ -28,7 +28,7 @@ assignment PDF as an implementation specification.
 
 ## Verified Baseline
 
-- Node.js 24; 79 Vitest tests pass across 8 suites; ESLint has no
+- Node.js 24; 80 Vitest tests pass across 9 suites; ESLint has no
   warnings/errors; webpack
   production build succeeds.
 - Landing has one `Create new session` action before revealing paired links.
@@ -36,6 +36,8 @@ assignment PDF as an implementation specification.
   activity tracking, accessible errors, and submission locking.
 - Phase 3 realtime hooks already implement patches, lifecycle events, snapshot
   recovery, monotonic revisions, session isolation, and client isolation.
+- Each isolated realtime client uses a unique ephemeral auth namespace, avoiding
+  Supabase GoTrue multi-instance warnings without browser persistence.
 
 ## Phase 5: Staff Monitoring UI
 
