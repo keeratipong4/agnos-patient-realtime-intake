@@ -162,6 +162,7 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
             ...patch.patch,
           },
           lastChangedField: patch.changedField,
+          lastActivityAt: patch.sentAt,
         }));
       })
       .on("broadcast", { event: REALTIME_EVENT.formSnapshot }, (message) => {

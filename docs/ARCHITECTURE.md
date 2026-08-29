@@ -268,13 +268,12 @@ src/
 │   │   ├── form-section.tsx
 │   │   └── patient-vertical-slice.tsx  # Phase 1 compatibility adapter
 │   └── staff/
-│       └── staff-vertical-slice.tsx    # Replaced by the Phase 5 dashboard
+│       └── staff-monitor.tsx           # Complete Phase 5 live dashboard
 ├── hooks/
 │   ├── use-patient-sync.ts
 │   ├── use-staff-sync.ts
 │   ├── use-idle-tracker.ts
 │   ├── use-patient-vertical-slice.ts
-│   └── use-staff-vertical-slice.ts
 ├── lib/
 │   ├── supabase.ts
 │   ├── realtime-events.ts
@@ -304,6 +303,21 @@ Production remains on the Phase 3 v0.3.0 release until the Phase 4 branch passes
 Preview review and the documented release workflow. The Supabase project currently
 runs in `ap-northeast-2` (Seoul); this is accepted for the assignment demo because
 P0 correctness and deployment take priority over regional latency optimization.
+
+### Phase 5 Implementation Status — Completed Locally August 29, 2026
+
+The Staff route now renders a responsive read-only dashboard backed directly by
+`useStaffSync`. Connection Presence and Patient lifecycle status appear as
+separate text-based cards. All Patient fields follow the Patient Form's three
+section groups, untouched values are explicit, and the latest patched field uses
+both an outline and a `Latest update` label. Activity and submission timestamps
+are rendered when the protocol provides them.
+
+The synchronizer remains the only consumer of Realtime events. It preserves
+revision/session guards and snapshot recovery, records patch timestamps as the
+latest known activity, and locks submitted values against Presence leave and
+later draft events. Component integration tests exercise those behaviors through
+the existing hook rather than duplicating protocol logic in the UI.
 
 ---
 

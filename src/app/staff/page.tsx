@@ -1,5 +1,5 @@
 import { InvalidSession } from "@/components/common/invalid-session";
-import { StaffVerticalSlice } from "@/components/staff/staff-vertical-slice";
+import { StaffMonitor } from "@/components/staff/staff-monitor";
 import { getSessionId } from "@/lib/session";
 
 type StaffPageProps = {
@@ -15,5 +15,5 @@ export default async function StaffPage({ searchParams }: StaffPageProps) {
     return <InvalidSession role="Staff" />;
   }
 
-  return <StaffVerticalSlice sessionId={sessionId} />;
+  return <StaffMonitor sessionId={sessionId} />;
 }

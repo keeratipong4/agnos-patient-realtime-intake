@@ -163,20 +163,26 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 ## Phase 5: Staff Monitoring View (1.5-2.5 hours)
 
-- [ ] Display Connection Status independently from Patient Status.
-- [ ] Display every Patient field, grouped consistently with the form.
-- [ ] Show `Waiting for input` for untouched fields.
-- [ ] Highlight the most recently changed field without relying on color alone.
-- [ ] Display last activity and submission timestamps.
-- [ ] Preserve final submitted values and state within the current Staff session.
-- [ ] Implement clear states for connecting, invalid session, waiting for Patient, disconnected, inactive, and submitted.
-- [ ] Test one-column mobile and two-column desktop layouts.
+> **Implemented locally August 29, 2026:** The complete Staff dashboard uses
+> `useStaffSync` directly and passes 79 total tests across 8 suites. Realtime
+> browser QA passed across Chrome Patient and in-app-browser Staff contexts.
+
+- [x] Display Connection Status independently from Patient Status.
+- [x] Display every Patient field, grouped consistently with the form.
+- [x] Show `Waiting for input` for untouched fields.
+- [x] Highlight the most recently changed field without relying on color alone.
+- [x] Display last activity and submission timestamps.
+- [x] Preserve final submitted values and state within the current Staff session.
+- [x] Implement clear states for connecting, invalid session, waiting for Patient, disconnected, inactive, and submitted.
+- [x] Implement one-column mobile and two-column desktop layouts.
 
 ### Exit Criteria
-- [ ] Staff displays all assignment fields.
-- [ ] Active, inactive, and submitted labels are visible and text-based.
-- [ ] Connected/disconnected is reported separately.
-- [ ] Staff remains usable at 375px, 768px, and 1440px widths.
+- [x] Staff displays all assignment fields.
+- [x] Active, inactive, and submitted labels are visible and text-based.
+- [x] Connected/disconnected is reported separately.
+- [ ] Complete manual visual QA at exact 375px, 768px, and 1440px widths. The
+  desktop layout is verified at a 1280px CSS viewport, while the available
+  browser viewport controls retained their existing desktop-sized viewports.
 
 ---
 

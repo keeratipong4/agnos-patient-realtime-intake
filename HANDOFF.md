@@ -16,19 +16,20 @@ assignment PDF as an implementation specification.
 
 ## Current State
 
-- Checked-out branch: `develop`.
-- Local and origin `develop`, `main`, and `feature/patient-form` all point to
-  `9886d8a`, following Patient Form commit `a8f7158`.
-- Phase 0 through Phase 4 are integrated. Phase 5 Staff Monitoring UI is next.
+- Checked-out branch: `feature/staff-monitor`, created from local `develop` at
+  `98851ec`. Phase 5 changes are intentionally uncommitted pending approval.
+- Local `develop` points to `98851ec`; `origin/develop`, `main`, and
+  `feature/patient-form` point to `9886d8a`.
+- Phase 0 through Phase 4 are integrated. Phase 5 Staff Monitoring UI is
+  implemented locally and Phase 6 QA/release work is next.
 - Production: https://agnos-patient-realtime-intake.vercel.app — deployment of
   `9886d8a` has not been re-verified in this handoff.
-- Create `feature/staff-monitor` from `develop`; do not implement Phase 5
-  directly on `develop` or `main`.
 - Do not push, deploy, or create external resources without explicit permission.
 
 ## Verified Baseline
 
-- Node.js 24; 71 Vitest tests pass; ESLint has no warnings/errors; webpack
+- Node.js 24; 79 Vitest tests pass across 8 suites; ESLint has no
+  warnings/errors; webpack
   production build succeeds.
 - Landing has one `Create new session` action before revealing paired links.
 - Patient Form uses React Hook Form + Zod, scoped broadcasting, five-second
@@ -38,20 +39,21 @@ assignment PDF as an implementation specification.
 
 ## Phase 5: Staff Monitoring UI
 
-Use the existing `useStaffSync(sessionId)` hook; do not duplicate the realtime
-protocol in the component.
+`src/components/staff/staff-monitor.tsx` now uses the existing
+`useStaffSync(sessionId)` hook directly and provides:
 
-Implement:
+- separate text-based Connection and Patient Status cards;
+- all Patient fields in the same three groups as the Patient Form, including
+  explicit `Waiting for input` values;
+- text-and-outline latest-field feedback plus activity/submission timestamps;
+- connecting, waiting, disconnected, inactive, submitted, and invalid-session
+  states;
+- a read-only submitted summary protected by the existing hook guards; and
+- responsive one- and two-column Tailwind layouts.
 
-- Separate text-based Connection and Patient Status indicators.
-- Every `PatientFormData` field, grouped like the Patient Form, with
-  `Waiting for input` for untouched values.
-- Non-color-only recent-field highlighting plus activity/submission timestamps.
-- Clear connecting, disconnected, inactive, submitted, and invalid-session states.
-- A read-only submitted summary that Presence leave cannot overwrite.
-- Responsive layouts at 375px, 768px, and 1440px.
-- Component tests for fields, highlights, statuses, recovery, disconnect, and
-  submitted-state locking.
+The new component integration suite drives the real synchronizer through a mock
+Realtime channel and covers full/partial snapshots, patches, recent-field
+feedback, lifecycle changes, disconnect preservation, and submission locking.
 
 ## Protocol Guardrails
 
@@ -65,7 +67,7 @@ Implement:
 ## Key Files
 
 - UI entry points: `src/app/staff/page.tsx` and
-  `src/components/staff/staff-vertical-slice.tsx`.
+  `src/components/staff/staff-monitor.tsx`.
 - Contracts: `src/hooks/use-staff-sync.ts`, `src/lib/realtime-events.ts`, and
   `src/types/index.ts`.
 - Reference UI/spec: `src/components/patient/patient-form.tsx`, Phase 5 in
@@ -85,3 +87,10 @@ npm run build
 Also test Patient and Staff in separate browser contexts for live updates, late
 join, refresh recovery, disconnect, inactivity, submission, and session
 isolation. Report blockers and leave commits/pushes for explicit approval.
+
+Local browser QA passed those realtime scenarios using Chrome Patient and
+in-app-browser Staff contexts with fake data. The desktop layout was visually
+inspected at the browser surface's 1280px CSS viewport. Exact 375px, 768px, and
+1440px visual checks remain manual because both browser viewport capabilities
+retained their existing desktop-sized CSS viewports, and the browser security
+policy rejected an embedded fixed-width harness. No workaround was attempted.

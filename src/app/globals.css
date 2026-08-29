@@ -31,3 +31,27 @@ textarea {
   background: #99f6e4;
   color: #0f172a;
 }
+
+@keyframes recent-field-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(13 148 136 / 0.32);
+  }
+
+  45% {
+    box-shadow: 0 0 0 0.45rem rgb(13 148 136 / 0.12);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgb(13 148 136 / 0);
+  }
+}
+
+.recent-field-pulse {
+  animation: recent-field-pulse 1.5s ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-field-pulse {
+    animation: none;
+  }
+}
