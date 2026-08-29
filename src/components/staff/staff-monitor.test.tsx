@@ -196,6 +196,67 @@ describe("StaffMonitor", () => {
     expect(getField("lastName").dataset.recentField).toBe("true");
   });
 
+  it("moves the animated highlight on focus alone and keeps a static highlight when inactive or disconnected", async () => {
+    render(<StaffMonitor sessionId={sessionId} />);
+    await subscribe();
+    await connectPatient();
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.fieldFocused, {
+        sessionId,
+        focusedField: "firstName",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:03:10.000Z",
+        revision: 1,
+      });
+    });
+
+    expect(getField("firstName").dataset.highlightMode).toBe("active");
+    expect(getField("firstName").className).toContain("active-field-pulse");
+    expect(
+      within(getField("firstName")).getByText("Patient working here"),
+    ).toBeDefined();
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.fieldFocused, {
+        sessionId,
+        focusedField: "lastName",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:03:20.000Z",
+        revision: 2,
+      });
+    });
+
+    expect(getField("firstName").dataset.highlightMode).toBe("none");
+    expect(getField("lastName").dataset.highlightMode).toBe("active");
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.statusChanged, {
+        sessionId,
+        patientStatus: "inactive",
+        lastActivityAt: "2026-08-29T08:03:30.000Z",
+        revision: 3,
+      });
+    });
+
+    expect(getField("lastName").dataset.highlightMode).toBe("static");
+    expect(getField("lastName").className).not.toContain(
+      "active-field-pulse",
+    );
+    expect(
+      within(getField("lastName")).getByText("Last active field"),
+    ).toBeDefined();
+
+    await act(async () => {
+      mockChannel.triggerPresence("leave", {});
+    });
+
+    expect(getField("lastName").dataset.highlightMode).toBe("static");
+    expect(getField("lastName").className).not.toContain(
+      "active-field-pulse",
+    );
+  });
+
   it("shows connection and lifecycle changes independently with last activity", async () => {
     render(<StaffMonitor sessionId={sessionId} />);
     await subscribe();
@@ -346,6 +407,13 @@ describe("StaffMonitor", () => {
         revision: 13,
         sentAt: "2026-08-29T08:11:00.000Z",
       });
+      mockChannel.triggerBroadcast(REALTIME_EVENT.fieldFocused, {
+        sessionId,
+        focusedField: "email",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:12:00.000Z",
+        revision: 14,
+      });
     });
 
     expect(screen.getByText("Disconnected")).toBeDefined();
@@ -354,5 +422,7 @@ describe("StaffMonitor", () => {
     expect(screen.queryByText("Overwritten draft")).toBeNull();
     expect(screen.queryByText("Stale snapshot")).toBeNull();
     expect(screen.queryByText("Latest update")).toBeNull();
+    expect(screen.queryByText("Patient working here")).toBeNull();
+    expect(getField("email").dataset.highlightMode).toBe("none");
   });
 });

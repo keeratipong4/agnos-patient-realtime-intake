@@ -61,11 +61,12 @@ Maintain two distinct, orthogonal status concepts in the application:
    - Represents physical WebSocket connectivity between the browser and the Supabase Realtime cluster.
 
 2. **`PatientStatus`** (`"actively_filling" | "inactive" | "submitted"`):
-   - Managed via ephemeral Broadcast events (`STATUS_CHANGED`, `FORM_SNAPSHOT`, `FORM_SUBMITTED`).
+   - Managed via ephemeral Broadcast events (`FIELD_FOCUSED`, `STATUS_CHANGED`, `FORM_SNAPSHOT`, `FORM_SUBMITTED`).
    - Represents the clinical/intake activity state of the patient.
    - Transitioned to `"actively_filling"` on user input/focus.
    - Transitioned to `"inactive"` after a 5-second idle timeout, window blur, or document hide.
    - Transitioned to `"submitted"` upon valid form submission. Once `"submitted"`, status is immutable.
+   - The latest focused field is broadcast with the active lifecycle state and recovered in snapshots, while inactive/disconnected Staff UI keeps that field as a static highlight.
 
 ### Rationale
 - Decouples network connection drops (e.g., brief Wi-Fi blips) from user behavior (e.g., typing vs. idle).

@@ -4,6 +4,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useEffect, useRef, useState } from "react";
 
 import {
+  getFieldFocusedPayload,
   getFormPatchPayload,
   getFormSnapshotPayload,
   getFormSubmittedPayload,
@@ -21,6 +22,7 @@ import {
 import type {
   ConnectionStatus,
   PatientFormData,
+  PatientFormFieldPath,
   PatientPresence,
   PatientStatus,
 } from "@/types";
@@ -29,6 +31,7 @@ export type StaffSyncResult = {
   connectionStatus: ConnectionStatus;
   patientStatus: PatientStatus;
   formData: Partial<PatientFormData>;
+  focusedField: PatientFormFieldPath | null;
   lastChangedField: keyof PatientFormData | null;
   lastActivityAt: string | null;
   submittedAt: string | null;
@@ -55,6 +58,7 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
     connectionStatus: (isConfigured ? "connecting" : "disconnected") as ConnectionStatus,
     patientStatus: "inactive" as PatientStatus,
     formData: {} as Partial<PatientFormData>,
+    focusedField: null as PatientFormFieldPath | null,
     lastChangedField: null as keyof PatientFormData | null,
     lastActivityAt: null as string | null,
     submittedAt: null as string | null,
@@ -71,6 +75,7 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
     ? sessionState.patientStatus
     : "inactive";
   const formData = isCurrentSession ? sessionState.formData : {};
+  const focusedField = isCurrentSession ? sessionState.focusedField : null;
   const lastChangedField = isCurrentSession
     ? sessionState.lastChangedField
     : null;
@@ -134,6 +139,37 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
       .on("presence", { event: "leave" }, () => {
         updatePresenceStatus(channel);
       })
+      .on("broadcast", { event: REALTIME_EVENT.fieldFocused }, (message) => {
+        const payload = getFieldFocusedPayload(
+          message as BroadcastEnvelope,
+        );
+
+        if (
+          !payload ||
+          !isFreshEvent(
+            payload.sessionId,
+            sessionId,
+            payload.revision,
+            latestRevisionRef.current,
+          )
+        ) {
+          return;
+        }
+
+        if (patientStatusRef.current === "submitted") {
+          return;
+        }
+
+        latestRevisionRef.current = payload.revision;
+        patientStatusRef.current = "actively_filling";
+        setSessionState((prev) => ({
+          ...prev,
+          sessionId,
+          focusedField: payload.focusedField,
+          patientStatus: "actively_filling",
+          lastActivityAt: payload.lastActivityAt,
+        }));
+      })
       .on("broadcast", { event: REALTIME_EVENT.formPatch }, (message) => {
         const patch = getFormPatchPayload(message as BroadcastEnvelope);
 
@@ -154,6 +190,9 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
         }
 
         latestRevisionRef.current = patch.revision;
+        if (patch.patientStatus) {
+          patientStatusRef.current = patch.patientStatus;
+        }
         setSessionState((prev) => ({
           ...prev,
           sessionId,
@@ -161,8 +200,13 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
             ...prev.formData,
             ...patch.patch,
           },
+          focusedField:
+            patch.focusedField === undefined
+              ? prev.focusedField
+              : patch.focusedField,
           lastChangedField: patch.changedField,
           lastActivityAt: patch.sentAt,
+          patientStatus: patch.patientStatus ?? prev.patientStatus,
         }));
       })
       .on("broadcast", { event: REALTIME_EVENT.formSnapshot }, (message) => {
@@ -195,6 +239,7 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
           ...prev,
           sessionId,
           formData: snapshot.formData,
+          focusedField: snapshot.focusedField ?? null,
           patientStatus: snapshot.patientStatus,
         }));
       })
@@ -222,6 +267,10 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
         setSessionState((prev) => ({
           ...prev,
           sessionId,
+          focusedField:
+            payload.focusedField === undefined
+              ? prev.focusedField
+              : payload.focusedField,
           patientStatus: payload.patientStatus,
           lastActivityAt: payload.lastActivityAt,
         }));
@@ -309,6 +358,7 @@ export function useStaffSync(sessionId: string): StaffSyncResult {
 
   return {
     connectionStatus,
+    focusedField,
     patientStatus,
     formData,
     lastChangedField,

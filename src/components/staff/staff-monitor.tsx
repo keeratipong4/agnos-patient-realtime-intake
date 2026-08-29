@@ -8,6 +8,7 @@ import { useStaffSync } from "@/hooks/use-staff-sync";
 import type {
   ConnectionStatus,
   PatientFormData,
+  PatientFormFieldPath,
   PatientStatus,
 } from "@/types";
 
@@ -67,6 +68,11 @@ type DashboardState = {
   title: string;
   tone: "blue" | "emerald" | "amber" | "slate";
 };
+
+type FieldHighlight = {
+  label: "Patient working here" | "Last active field" | "Latest update";
+  mode: "active" | "static";
+} | null;
 
 function PatientStatusBadge({ status }: { status: PatientStatus }) {
   return (
@@ -230,32 +236,38 @@ function getDashboardState(
 function MonitorField({
   displayValue,
   field,
+  highlight,
   label,
-  recentlyChanged,
 }: {
   displayValue?: string;
-  field: string;
+  field: PatientFormFieldPath;
+  highlight: FieldHighlight;
   label: string;
-  recentlyChanged: boolean;
 }) {
   const hasValue = Boolean(displayValue?.trim());
+  const isHighlighted = highlight !== null;
 
   return (
     <div
       className={`min-w-0 rounded-2xl border p-4 transition sm:p-5 ${
-        recentlyChanged
-          ? "recent-field-pulse border-teal-500 bg-teal-50 ring-2 ring-teal-200"
+        isHighlighted
+          ? `border-teal-500 bg-teal-50 outline-2 outline-offset-2 outline-teal-200 ${
+              highlight.mode === "active" ? "active-field-pulse" : ""
+            }`
           : "border-slate-200 bg-white"
       }`}
       data-field={field}
-      data-recent-field={recentlyChanged ? "true" : "false"}
+      data-highlight-mode={highlight?.mode ?? "none"}
+      data-recent-field={isHighlighted ? "true" : "false"}
     >
       <dt className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
         <span>{label}</span>
-        {recentlyChanged ? (
+        {highlight ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-teal-700 px-2.5 py-1 text-[0.7rem] tracking-normal text-white normal-case">
-            <span aria-hidden="true">↻</span>
-            Latest update
+            <span aria-hidden="true">
+              {highlight.mode === "active" ? "↻" : "•"}
+            </span>
+            {highlight.label}
           </span>
         ) : null}
       </dt>
@@ -330,6 +342,7 @@ function StatusPanel({
 export function StaffMonitor({ sessionId }: { sessionId: string }) {
   const {
     connectionStatus,
+    focusedField,
     formData,
     lastActivityAt,
     lastChangedField,
@@ -348,8 +361,38 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
     amber: "border-amber-200 bg-amber-50 text-amber-950",
     slate: "border-slate-200 bg-slate-100 text-slate-900",
   };
-  const isRecent = (field: keyof PatientFormData) =>
-    patientStatus !== "submitted" && lastChangedField === field;
+  const getFieldHighlight = (
+    field: PatientFormFieldPath,
+  ): FieldHighlight => {
+    if (patientStatus === "submitted") {
+      return null;
+    }
+
+    const isHighlighted = focusedField
+      ? focusedField === field
+      : lastChangedField === field ||
+        (lastChangedField === "emergencyContact" &&
+          field.startsWith("emergencyContact."));
+
+    if (!isHighlighted) {
+      return null;
+    }
+
+    const mode =
+      connectionStatus === "connected" &&
+      patientStatus === "actively_filling"
+        ? "active"
+        : "static";
+
+    return {
+      label: focusedField
+        ? mode === "active"
+          ? "Patient working here"
+          : "Last active field"
+        : "Latest update",
+      mode,
+    };
+  };
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-10 lg:px-10">
@@ -470,26 +513,26 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
             <MonitorField
               displayValue={formData.firstName}
               field="firstName"
+              highlight={getFieldHighlight("firstName")}
               label="First name"
-              recentlyChanged={isRecent("firstName")}
             />
             <MonitorField
               displayValue={formData.middleName}
               field="middleName"
+              highlight={getFieldHighlight("middleName")}
               label="Middle name"
-              recentlyChanged={isRecent("middleName")}
             />
             <MonitorField
               displayValue={formData.lastName}
               field="lastName"
+              highlight={getFieldHighlight("lastName")}
               label="Last name"
-              recentlyChanged={isRecent("lastName")}
             />
             <MonitorField
               displayValue={formatDateOfBirth(formData.dateOfBirth)}
               field="dateOfBirth"
+              highlight={getFieldHighlight("dateOfBirth")}
               label="Date of birth"
-              recentlyChanged={isRecent("dateOfBirth")}
             />
             <MonitorField
               displayValue={
@@ -498,8 +541,8 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
                   : formData.gender
               }
               field="gender"
+              highlight={getFieldHighlight("gender")}
               label="Gender"
-              recentlyChanged={isRecent("gender")}
             />
             <MonitorField
               displayValue={formatOption(
@@ -507,8 +550,8 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
                 NATIONALITY_LABELS,
               )}
               field="nationality"
+              highlight={getFieldHighlight("nationality")}
               label="Nationality"
-              recentlyChanged={isRecent("nationality")}
             />
             <MonitorField
               displayValue={formatOption(
@@ -516,14 +559,14 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
                 LANGUAGE_LABELS,
               )}
               field="preferredLanguage"
+              highlight={getFieldHighlight("preferredLanguage")}
               label="Preferred language"
-              recentlyChanged={isRecent("preferredLanguage")}
             />
             <MonitorField
               displayValue={formatOption(formData.religion, RELIGION_LABELS)}
               field="religion"
+              highlight={getFieldHighlight("religion")}
               label="Religion"
-              recentlyChanged={isRecent("religion")}
             />
           </MonitorSection>
         </div>
@@ -537,21 +580,21 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
           <MonitorField
             displayValue={formData.phoneNumber}
             field="phoneNumber"
+            highlight={getFieldHighlight("phoneNumber")}
             label="Phone number"
-            recentlyChanged={isRecent("phoneNumber")}
           />
           <MonitorField
             displayValue={formData.email}
             field="email"
+            highlight={getFieldHighlight("email")}
             label="Email address"
-            recentlyChanged={isRecent("email")}
           />
           <div className="sm:col-span-2">
             <MonitorField
               displayValue={formData.address}
               field="address"
+              highlight={getFieldHighlight("address")}
               label="Full address"
-              recentlyChanged={isRecent("address")}
             />
           </div>
         </MonitorSection>
@@ -565,8 +608,8 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
           <MonitorField
             displayValue={formData.emergencyContact?.name}
             field="emergencyContact.name"
+            highlight={getFieldHighlight("emergencyContact.name")}
             label="Contact name"
-            recentlyChanged={isRecent("emergencyContact")}
           />
           <MonitorField
             displayValue={formatOption(
@@ -574,8 +617,8 @@ export function StaffMonitor({ sessionId }: { sessionId: string }) {
               RELATIONSHIP_LABELS,
             )}
             field="emergencyContact.relationship"
+            highlight={getFieldHighlight("emergencyContact.relationship")}
             label="Relationship"
-            recentlyChanged={isRecent("emergencyContact")}
           />
         </MonitorSection>
       </div>

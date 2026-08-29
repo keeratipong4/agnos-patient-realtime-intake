@@ -113,10 +113,11 @@ Presence is not updated on every keystroke. Supabase describes Presence as appro
 The application detects lifecycle transitions locally and sends them through Broadcast events:
 
 - Input/focus handlers reset the idle timer and transition to `actively_filling`.
+- Focus handlers also send `FIELD_FOCUSED` immediately with the exact control path, even when its value has not changed.
 - Five seconds without activity, window blur, or `document.visibilityState === "hidden"` transitions to `inactive`.
 - Successful Zod validation and form submission transitions to `submitted`.
 
-`STATUS_CHANGED` is sent only when the state actually changes, rather than for every input event. Form values themselves use debounced `FORM_PATCH` events.
+`STATUS_CHANGED` is sent only when the state actually changes, rather than for every input event. Focus identity uses immediate `FIELD_FOCUSED` events, while form values use debounced `FORM_PATCH` events.
 
 ### 3.3 Why Lifecycle Does Not Use Presence
 
@@ -126,6 +127,7 @@ The choice is based on semantics and lifecycle behavior:
 | --- | --- | --- |
 | Patient joined or left the channel | Presence | Supabase provides `sync`, `join`, and `leave` reconciliation for connected clients. |
 | Focus and idle detection | Browser events + idle timer | Supabase cannot infer UI focus or application-defined idle duration. |
+| Current focused field | Broadcast `FIELD_FOCUSED` | Staff needs the control path immediately, before the Patient changes its value. |
 | Active/inactive transition | Broadcast `STATUS_CHANGED` | It is application state and may change more frequently than Presence is intended to update. |
 | Submitted status and final values | Broadcast `FORM_SUBMITTED` | Submission is a business event that must not disappear merely because the Patient Presence entry leaves the channel. |
 
@@ -139,6 +141,20 @@ The Staff UI displays connection health and patient lifecycle as separate labels
 
 Every payload contains a `sessionId` and monotonically increasing `revision`. Staff ignores events with a revision older than the latest applied revision.
 
+### `FIELD_FOCUSED`
+
+Sent immediately when Patient focus moves to a form control. Nested Emergency Contact controls use their exact React Hook Form paths.
+
+```typescript
+{
+  sessionId: string;
+  focusedField: PatientFormFieldPath;
+  patientStatus: "actively_filling";
+  lastActivityAt: string;
+  revision: number;
+}
+```
+
 ### `FORM_PATCH`
 
 Sent after a debounced field change.
@@ -148,6 +164,8 @@ Sent after a debounced field change.
   sessionId: string;
   patch: Partial<PatientFormData>;
   changedField: keyof PatientFormData;
+  focusedField: PatientFormFieldPath | null;
+  patientStatus: "actively_filling" | "inactive";
   revision: number;
   sentAt: string;
 }
@@ -174,6 +192,7 @@ Sent by the connected Patient in response to `SNAPSHOT_REQUEST`. This allows a l
   sessionId: string;
   requestId: string;
   formData: Partial<PatientFormData>;
+  focusedField: PatientFormFieldPath | null;
   patientStatus: PatientStatus;
   revision: number;
   sentAt: string;
@@ -187,6 +206,7 @@ Sent only when the lifecycle state changes, not for every keystroke.
 ```typescript
 {
   sessionId: string;
+  focusedField: PatientFormFieldPath | null;
   patientStatus: PatientStatus;
   lastActivityAt: string;
   revision: number;
@@ -237,6 +257,11 @@ sequenceDiagram
     PatientApp->>Realtime: FORM_PATCH { patch, changedField, revision }
     Realtime-->>StaffApp: FORM_PATCH
     StaffApp->>Staff: Apply patch and highlight field
+
+    Patient->>PatientApp: Focus the next field
+    PatientApp->>Realtime: FIELD_FOCUSED { focusedField, revision }
+    Realtime-->>StaffApp: FIELD_FOCUSED
+    StaffApp->>Staff: Move active pulse before value changes
 
     Patient->>PatientApp: Submit valid form
     PatientApp->>Realtime: FORM_SUBMITTED { final form, revision }
@@ -293,7 +318,8 @@ top-level `PatientFormData` fields without observing the entire form from its ro
 The browser activity tracker transitions to `actively_filling` on interaction and
 to `inactive` after five seconds, window blur, or a hidden document. Valid submit
 events send the normalized final payload and lock the Patient UI in a visible
-`Submission Confirmed` state.
+`Submission Confirmed` state. The Patient header shows connection health but does
+not mirror the Staff-only active/inactive lifecycle indicators.
 
 The landing page now uses one pre-session action instead of presenting Patient and
 Staff as independent cards. After UUID creation, one shared result surface explains
@@ -310,8 +336,11 @@ The Staff route now renders a responsive read-only dashboard backed directly by
 `useStaffSync`. Connection Presence and Patient lifecycle status appear as
 separate text-based cards. All Patient fields follow the Patient Form's three
 section groups, untouched values are explicit, and the latest patched field uses
-both an outline and a `Latest update` label. Activity and submission timestamps
-are rendered when the protocol provides them.
+both an outline and a text label. Immediate focus events move an infinite,
+reduced-motion-safe pulse/grow marker before typing begins; inactive or
+disconnected sessions retain the same field as a static `Last active field`
+highlight. Activity and submission timestamps are rendered when the protocol
+provides them.
 
 The synchronizer remains the only consumer of Realtime events. It preserves
 revision/session guards and snapshot recovery, records patch timestamps as the

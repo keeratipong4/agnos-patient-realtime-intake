@@ -17,7 +17,8 @@ assignment PDF as an implementation specification.
 ## Current State
 
 - Checked-out branch: `feature/staff-monitor`, created from local `develop` at
-  `98851ec`. Phase 5 changes are committed on this branch.
+  `98851ec`. The Phase 5 dashboard baseline is committed; focus-driven Staff UX
+  improvements are currently uncommitted pending approval.
 - Local `develop` points to `98851ec`; `origin/develop`, `main`, and
   `feature/patient-form` point to `9886d8a`.
 - Phase 0 through Phase 4 are integrated. Phase 5 Staff Monitoring UI is
@@ -28,7 +29,7 @@ assignment PDF as an implementation specification.
 
 ## Verified Baseline
 
-- Node.js 24; 80 Vitest tests pass across 9 suites; ESLint has no
+- Node.js 24; 89 Vitest tests pass across 9 suites; ESLint has no
   warnings/errors; webpack
   production build succeeds.
 - Landing has one `Create new session` action before revealing paired links.
@@ -38,6 +39,9 @@ assignment PDF as an implementation specification.
   recovery, monotonic revisions, session isolation, and client isolation.
 - Each isolated realtime client uses a unique ephemeral auth namespace, avoiding
   Supabase GoTrue multi-instance warnings without browser persistence.
+- Browser QA verifies focus-only field movement, active pulse/grow animation,
+  inactive/disconnected static highlighting, and responsive layouts at exact
+  375px, 768px, and 1440px widths.
 
 ## Phase 5: Staff Monitoring UI
 
@@ -47,7 +51,8 @@ assignment PDF as an implementation specification.
 - separate text-based Connection and Patient Status cards;
 - all Patient fields in the same three groups as the Patient Form, including
   explicit `Waiting for input` values;
-- text-and-outline latest-field feedback plus activity/submission timestamps;
+- immediate focus-driven pulse/grow feedback, static inactive/disconnected
+  highlighting, and activity/submission timestamps;
 - connecting, waiting, disconnected, inactive, submitted, and invalid-session
   states;
 - a read-only submitted summary protected by the existing hook guards; and

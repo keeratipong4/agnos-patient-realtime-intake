@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FocusEvent } from "react";
 import {
   useForm,
   type FieldError as HookFormFieldError,
@@ -14,8 +14,9 @@ import { FormSection } from "@/components/patient/form-section";
 import { PatientFormBroadcaster } from "@/components/patient/patient-field-sync";
 import { useIdleTracker } from "@/hooks/use-idle-tracker";
 import { usePatientSync } from "@/hooks/use-patient-sync";
+import { isPatientFormFieldPath } from "@/lib/realtime-events";
 import { patientFormSchema } from "@/lib/validations";
-import type { PatientFormData, PatientStatus } from "@/types";
+import type { PatientFormData } from "@/types";
 
 const EMPTY_FORM_VALUES: PatientFormData = {
   firstName: "",
@@ -37,18 +38,6 @@ const EMPTY_FORM_VALUES: PatientFormData = {
 
 const INPUT_BASE_CLASS =
   "mt-2 min-h-12 w-full rounded-xl border bg-white px-4 py-3 text-base text-slate-950 outline-none transition placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-600";
-
-const PATIENT_STATUS_STYLES: Record<PatientStatus, string> = {
-  actively_filling: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  inactive: "border-amber-200 bg-amber-50 text-amber-800",
-  submitted: "border-blue-200 bg-blue-50 text-blue-800",
-};
-
-const PATIENT_STATUS_LABELS: Record<PatientStatus, string> = {
-  actively_filling: "Actively filling",
-  inactive: "Inactive",
-  submitted: "Submitted",
-};
 
 // Zod preprocessors intentionally accept unknown input, while every value
 // produced by these browser controls is a PatientFormData-compatible string.
@@ -120,29 +109,10 @@ function FieldError({
   );
 }
 
-function PatientStatusBadge({ status }: { status: PatientStatus }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold ${PATIENT_STATUS_STYLES[status]}`}
-    >
-      <span
-        aria-hidden="true"
-        className={`h-2 w-2 rounded-full ${
-          status === "actively_filling"
-            ? "bg-emerald-500 motion-safe:animate-pulse"
-            : status === "submitted"
-              ? "bg-blue-500"
-              : "bg-amber-500"
-        }`}
-      />
-      {PATIENT_STATUS_LABELS[status]}
-    </span>
-  );
-}
-
 export function PatientForm({ sessionId }: { sessionId: string }) {
   const {
     connectionStatus,
+    focusField,
     patchField,
     patientStatus,
     submitForm,
@@ -171,6 +141,16 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
     onStatusChange: updatePatientStatus,
   });
 
+  const handleFormFocus = (event: FocusEvent<HTMLFormElement>) => {
+    const focusedField = event.target.name;
+
+    if (isPatientFormFieldPath(focusedField)) {
+      focusField(focusedField);
+    }
+
+    recordActivity();
+  };
+
   const handleValidSubmit = handleSubmit(async (finalData) => {
     setIsSubmitting(true);
 
@@ -197,9 +177,8 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
             real time. Required fields are marked with an asterisk.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2" aria-label="Session status">
+        <div className="flex flex-wrap gap-2" aria-label="Realtime connection">
           <StatusBadge status={connectionStatus} />
-          <PatientStatusBadge status={patientStatus} />
         </div>
       </header>
 
@@ -238,7 +217,7 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
         className="rounded-3xl border border-slate-200 bg-white px-5 shadow-sm sm:px-9"
         noValidate
         onChangeCapture={recordActivity}
-        onFocusCapture={recordActivity}
+        onFocusCapture={handleFormFocus}
         onInputCapture={recordActivity}
         onSubmit={handleValidSubmit}
       >
