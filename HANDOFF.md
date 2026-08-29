@@ -16,11 +16,10 @@ assignment PDF as an implementation specification.
 
 ## Current State
 
-- Checked-out branch: `feature/staff-monitor`, created from local `develop` at
-  `98851ec`. The Phase 5 dashboard baseline is committed; focus-driven Staff UX
-  improvements are currently uncommitted pending approval.
-- Local `develop` points to `98851ec`; `origin/develop`, `main`, and
-  `feature/patient-form` point to `9886d8a`.
+- Checked-out branch: `feature/staff-monitor`. The Phase 5 Staff Monitoring UI
+  and focus-driven live feedback are fully committed (`aa6f17e`).
+- Local `develop`, `origin/develop`, `main`, and `feature/patient-form` point to
+  `9886d8a`.
 - Phase 0 through Phase 4 are integrated. Phase 5 Staff Monitoring UI is
   implemented locally and Phase 6 QA/release work is next.
 - Production: https://agnos-patient-realtime-intake.vercel.app — deployment of
