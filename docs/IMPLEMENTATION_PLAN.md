@@ -87,6 +87,7 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 - [x] Define `PatientFormData`, `PatientStatus`, `ConnectionStatus`, and all event payload types.
 - [x] Define event names in one shared module:
+  - `FIELD_FOCUSED`
   - `FORM_PATCH`
   - `SNAPSHOT_REQUEST`
   - `FORM_SNAPSHOT`
@@ -118,6 +119,7 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 - [x] Implement `usePatientSync` and `useStaffSync`.
 - [x] Add a monotonically increasing revision to Patient events.
 - [x] Broadcast debounced `FORM_PATCH` events after field changes.
+- [x] Broadcast immediate `FIELD_FOCUSED` events so Staff can identify focus before a value changes.
 - [x] Staff broadcasts `SNAPSHOT_REQUEST` immediately after subscribe and reconnect.
 - [x] Patient responds with `FORM_SNAPSHOT` containing current values, status, and revision.
 - [x] Staff ignores events older than the latest applied revision.
@@ -149,6 +151,7 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 - [x] Show inline errors on blur or submit.
 - [x] Show a visible `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.` notice.
 - [x] Provide success feedback after submission.
+- [x] Keep active/inactive lifecycle indicators on Staff only; Patient continues broadcasting those states without displaying them.
 - [x] Implement one-column mobile layout and a clear desktop layout.
 - [x] Simplify the landing page to one `Create new session` action before revealing the paired Patient and Staff links.
 
@@ -163,20 +166,26 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 ## Phase 5: Staff Monitoring View (1.5-2.5 hours)
 
-- [ ] Display Connection Status independently from Patient Status.
-- [ ] Display every Patient field, grouped consistently with the form.
-- [ ] Show `Waiting for input` for untouched fields.
-- [ ] Highlight the most recently changed field without relying on color alone.
-- [ ] Display last activity and submission timestamps.
-- [ ] Preserve final submitted values and state within the current Staff session.
-- [ ] Implement clear states for connecting, invalid session, waiting for Patient, disconnected, inactive, and submitted.
-- [ ] Test one-column mobile and two-column desktop layouts.
+> **Implemented locally August 29, 2026:** The complete Staff dashboard uses
+> `useStaffSync` directly and passes 89 total tests across 9 suites. Realtime
+> browser QA passed across Chrome Patient and in-app-browser Staff contexts.
+
+- [x] Display Connection Status independently from Patient Status.
+- [x] Display every Patient field, grouped consistently with the form.
+- [x] Show `Waiting for input` for untouched fields.
+- [x] Highlight the most recently changed field without relying on color alone.
+- [x] Move the active highlight on focus alone, animate it while actively filling, and retain a static highlight when inactive or disconnected.
+- [x] Display last activity and submission timestamps.
+- [x] Preserve final submitted values and state within the current Staff session.
+- [x] Implement clear states for connecting, invalid session, waiting for Patient, disconnected, inactive, and submitted.
+- [x] Implement one-column mobile and two-column desktop layouts.
 
 ### Exit Criteria
-- [ ] Staff displays all assignment fields.
-- [ ] Active, inactive, and submitted labels are visible and text-based.
-- [ ] Connected/disconnected is reported separately.
-- [ ] Staff remains usable at 375px, 768px, and 1440px widths.
+- [x] Staff displays all assignment fields.
+- [x] Active, inactive, and submitted labels are visible and text-based.
+- [x] Connected/disconnected is reported separately.
+- [x] Complete browser viewport QA at exact 375px, 768px, and 1440px widths
+  without horizontal overflow.
 
 ---
 

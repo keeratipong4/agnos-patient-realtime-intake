@@ -128,6 +128,98 @@ describe("useStaffSync hook and recovery behavior", () => {
     expect(result.current.lastChangedField).toBe("address");
   });
 
+  it("tracks focus-only events and drops stale focused-field revisions", async () => {
+    const { result } = await renderHook(() => useStaffSync(sessionId));
+
+    await act(async () => {
+      mockChannel.triggerSubscribe("SUBSCRIBED");
+    });
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.fieldFocused, {
+        sessionId,
+        focusedField: "firstName",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:00:00.000Z",
+        revision: 5,
+      });
+      mockChannel.triggerBroadcast(REALTIME_EVENT.fieldFocused, {
+        sessionId,
+        focusedField: "lastName",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:00:01.000Z",
+        revision: 6,
+      });
+      mockChannel.triggerBroadcast(REALTIME_EVENT.fieldFocused, {
+        sessionId,
+        focusedField: "email",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:00:00.500Z",
+        revision: 5,
+      });
+    });
+
+    expect(result.current.focusedField).toBe("lastName");
+    expect(result.current.patientStatus).toBe("actively_filling");
+    expect(result.current.lastActivityAt).toBe(
+      "2026-08-29T08:00:01.000Z",
+    );
+  });
+
+  it("recovers focus and lifecycle from a newer patch before dropping an older focus event", async () => {
+    const { result } = await renderHook(() => useStaffSync(sessionId));
+
+    await act(async () => {
+      mockChannel.triggerSubscribe("SUBSCRIBED");
+      mockChannel.triggerBroadcast(REALTIME_EVENT.formPatch, {
+        sessionId,
+        patch: { firstName: "Suda" },
+        changedField: "firstName",
+        focusedField: "lastName",
+        patientStatus: "actively_filling",
+        revision: 10,
+        sentAt: "2026-08-29T08:00:10.000Z",
+      });
+      mockChannel.triggerBroadcast(REALTIME_EVENT.fieldFocused, {
+        sessionId,
+        focusedField: "email",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:00:09.000Z",
+        revision: 9,
+      });
+    });
+
+    expect(result.current.formData.firstName).toBe("Suda");
+    expect(result.current.focusedField).toBe("lastName");
+    expect(result.current.patientStatus).toBe("actively_filling");
+  });
+
+  it("recovers the focused field from a matching snapshot", async () => {
+    const { result } = await renderHook(() => useStaffSync(sessionId));
+
+    await act(async () => {
+      mockChannel.triggerSubscribe("SUBSCRIBED");
+    });
+
+    const requestPayload = mockChannel.sentMessages.find(
+      (message) => message.event === REALTIME_EVENT.snapshotRequest,
+    )?.payload as SnapshotRequestPayload;
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.formSnapshot, {
+        sessionId,
+        requestId: requestPayload.requestId,
+        formData: { firstName: "Anong" },
+        focusedField: "firstName",
+        patientStatus: "actively_filling",
+        revision: 3,
+        sentAt: "2026-08-29T08:01:00.000Z",
+      });
+    });
+
+    expect(result.current.focusedField).toBe("firstName");
+  });
+
   it("ignores events with revisions older than or equal to the latest applied revision", async () => {
     const { result } = await renderHook(() => useStaffSync(sessionId));
 

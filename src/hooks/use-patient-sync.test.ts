@@ -170,6 +170,79 @@ describe("usePatientSync hook and protocol behavior", () => {
     expect(rev2).toBeGreaterThan(rev1);
   });
 
+  it("broadcasts field focus immediately and recovers it in snapshots", async () => {
+    const { result } = await renderHook(() => usePatientSync(sessionId));
+
+    await act(async () => {
+      mockChannel.triggerSubscribe("SUBSCRIBED");
+    });
+
+    act(() => {
+      result.current.focusField("firstName");
+      result.current.focusField("lastName");
+    });
+
+    const focusEvents = mockChannel.sentMessages.filter(
+      (message) => message.event === REALTIME_EVENT.fieldFocused,
+    );
+    expect(focusEvents).toHaveLength(2);
+    expect(focusEvents[0].payload).toMatchObject({
+      sessionId,
+      focusedField: "firstName",
+      patientStatus: "actively_filling",
+      revision: expect.any(Number),
+    });
+    expect(focusEvents[1].payload).toMatchObject({
+      sessionId,
+      focusedField: "lastName",
+      patientStatus: "actively_filling",
+      revision: expect.any(Number),
+    });
+
+    act(() => {
+      result.current.patchField("firstName", "Suda");
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    const patch = mockChannel.sentMessages.findLast(
+      (message) => message.event === REALTIME_EVENT.formPatch,
+    );
+    expect(patch?.payload).toMatchObject({
+      focusedField: "lastName",
+      patientStatus: "actively_filling",
+    });
+
+    act(() => {
+      result.current.updatePatientStatus("inactive");
+    });
+
+    const inactiveStatus = mockChannel.sentMessages.findLast(
+      (message) => message.event === REALTIME_EVENT.statusChanged,
+    );
+    expect(inactiveStatus?.payload).toMatchObject({
+      focusedField: "lastName",
+      patientStatus: "inactive",
+    });
+
+    const request: SnapshotRequestPayload = {
+      sessionId,
+      requestId: "req-focused-field",
+      requestedAt: new Date().toISOString(),
+    };
+
+    await act(async () => {
+      mockChannel.triggerBroadcast(REALTIME_EVENT.snapshotRequest, request);
+    });
+
+    const snapshot = mockChannel.sentMessages.findLast(
+      (message) => message.event === REALTIME_EVENT.formSnapshot,
+    )?.payload as FormSnapshotPayload;
+    expect(snapshot.focusedField).toBe("lastName");
+  });
+
   it("responds to SNAPSHOT_REQUEST with current form data and status in FORM_SNAPSHOT", async () => {
     const { result } = await renderHook(() => usePatientSync(sessionId));
 
