@@ -49,6 +49,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - The Phase 3 realtime protocol release is deployed at
   `https://agnos-patient-realtime-intake.vercel.app` as production v0.3.0.
 - Phase 4 Patient Form UI is complete on `feature/patient-form`, including the
-  single-action session launcher; Phase 5 Staff Monitoring UI is next.
+  single-action session launcher. Phase 5 Staff Monitoring UI is implemented
+  locally on `feature/staff-monitor`; Phase 6 QA and release work are next.
 - Do not push, deploy, or create external resources without explicit user
   confirmation.

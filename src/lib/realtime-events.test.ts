@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getFieldFocusedPayload,
   getFormPatchPayload,
   getFormSnapshotPayload,
   getFormSubmittedPayload,
   getSnapshotRequestPayload,
   getStatusChangedPayload,
   REALTIME_EVENT,
+  type FieldFocusedPayload,
   type FormPatchPayload,
   type FormSnapshotPayload,
   type FormSubmittedPayload,
@@ -19,6 +21,7 @@ describe("realtime-events contracts and parsers", () => {
   describe("REALTIME_EVENT constants", () => {
     it("defines the expected event names matching the architecture spec", () => {
       expect(REALTIME_EVENT).toEqual({
+        fieldFocused: "FIELD_FOCUSED",
         formPatch: "FORM_PATCH",
         snapshotRequest: "SNAPSHOT_REQUEST",
         formSnapshot: "FORM_SNAPSHOT",
@@ -28,12 +31,49 @@ describe("realtime-events contracts and parsers", () => {
     });
   });
 
+  describe("getFieldFocusedPayload", () => {
+    it("accepts a field focus lifecycle event", () => {
+      const payload: FieldFocusedPayload = {
+        sessionId: "00000000-0000-4000-8000-000000000001",
+        focusedField: "emergencyContact.relationship",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:00:00.000Z",
+        revision: 4,
+      };
+
+      expect(getFieldFocusedPayload({ payload })).toEqual(payload);
+    });
+
+    it("rejects unknown fields and non-active lifecycle states", () => {
+      const basePayload = {
+        sessionId: "00000000-0000-4000-8000-000000000001",
+        focusedField: "unknownField",
+        patientStatus: "actively_filling",
+        lastActivityAt: "2026-08-29T08:00:00.000Z",
+        revision: 4,
+      };
+
+      expect(getFieldFocusedPayload({ payload: basePayload })).toBeNull();
+      expect(
+        getFieldFocusedPayload({
+          payload: {
+            ...basePayload,
+            focusedField: "firstName",
+            patientStatus: "inactive",
+          },
+        }),
+      ).toBeNull();
+    });
+  });
+
   describe("getFormPatchPayload", () => {
     it("accepts a valid patch for firstName", () => {
       const payload: FormPatchPayload = {
         sessionId: "00000000-0000-4000-8000-000000000001",
         patch: { firstName: "กานต์" },
         changedField: "firstName",
+        focusedField: "lastName",
+        patientStatus: "actively_filling",
         revision: 1,
         sentAt: "2026-08-28T12:00:00.000Z",
       };
@@ -128,6 +168,22 @@ describe("realtime-events contracts and parsers", () => {
       };
 
       expect(getFormPatchPayload({ payload })).toBeNull();
+    });
+
+    it("rejects submitted lifecycle metadata on a draft patch", () => {
+      expect(
+        getFormPatchPayload({
+          payload: {
+            sessionId: "00000000-0000-4000-8000-000000000001",
+            patch: { firstName: "กานต์" },
+            changedField: "firstName",
+            focusedField: "firstName",
+            patientStatus: "submitted",
+            revision: 1,
+            sentAt: "2026-08-28T12:00:00.000Z",
+          },
+        }),
+      ).toBeNull();
     });
 
     it("rejects unknown keys in patch object", () => {

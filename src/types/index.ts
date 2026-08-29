@@ -31,6 +31,11 @@ export type PatientFormData = {
   religion?: string;
 };
 
+export type PatientFormFieldPath =
+  | Exclude<keyof PatientFormData, "emergencyContact">
+  | "emergencyContact.name"
+  | "emergencyContact.relationship";
+
 export type VerticalSliceFormData = {
   firstName: string;
 };

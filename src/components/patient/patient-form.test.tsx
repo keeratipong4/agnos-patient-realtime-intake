@@ -11,6 +11,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const syncMocks = vi.hoisted(() => ({
+  focusField: vi.fn(),
   patchField: vi.fn(),
   submitForm: vi.fn(),
   updatePatientStatus: vi.fn(),
@@ -61,11 +62,13 @@ function completeRequiredFields() {
 
 describe("PatientForm", () => {
   beforeEach(() => {
+    syncMocks.focusField.mockReset();
     syncMocks.patchField.mockReset();
     syncMocks.submitForm.mockReset().mockResolvedValue(true);
     syncMocks.updatePatientStatus.mockReset();
     syncMocks.usePatientSync.mockReset().mockReturnValue({
       connectionStatus: "connected",
+      focusField: syncMocks.focusField,
       formData: {},
       patchField: syncMocks.patchField,
       patientStatus: "inactive",
@@ -115,6 +118,28 @@ describe("PatientForm", () => {
     expect(screen.getByRole("note").textContent).toBe(
       "Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.",
     );
+  });
+
+  it("reports field focus immediately without showing lifecycle status badges", () => {
+    renderPatientForm();
+
+    fireEvent.focus(screen.getByLabelText(/first name/i));
+    fireEvent.focus(screen.getByLabelText(/last name/i));
+    fireEvent.focus(screen.getByLabelText(/contact name/i));
+    fireEvent.focus(screen.getByLabelText(/^relationship/i));
+
+    expect(syncMocks.focusField).toHaveBeenNthCalledWith(1, "firstName");
+    expect(syncMocks.focusField).toHaveBeenNthCalledWith(2, "lastName");
+    expect(syncMocks.focusField).toHaveBeenNthCalledWith(
+      3,
+      "emergencyContact.name",
+    );
+    expect(syncMocks.focusField).toHaveBeenNthCalledWith(
+      4,
+      "emergencyContact.relationship",
+    );
+    expect(screen.queryByText("Inactive")).toBeNull();
+    expect(screen.queryByText("Actively filling")).toBeNull();
   });
 
   it("shows inline validation feedback on blur", async () => {

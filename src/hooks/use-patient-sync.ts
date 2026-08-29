@@ -7,6 +7,7 @@ import {
   getSnapshotRequestPayload,
   REALTIME_EVENT,
   type BroadcastEnvelope,
+  type FieldFocusedPayload,
   type FormPatchPayload,
   type FormSnapshotPayload,
   type FormSubmittedPayload,
@@ -18,7 +19,12 @@ import {
   hasSupabaseBrowserConfig,
   REALTIME_CONFIG_ERROR,
 } from "@/lib/supabase";
-import type { ConnectionStatus, PatientFormData, PatientStatus } from "@/types";
+import type {
+  ConnectionStatus,
+  PatientFormData,
+  PatientFormFieldPath,
+  PatientStatus,
+} from "@/types";
 
 const DEFAULT_PATCH_DEBOUNCE_MS = 300;
 
@@ -34,6 +40,7 @@ export type PatientSyncResult = {
   patientStatus: PatientStatus;
   formData: Partial<PatientFormData>;
   syncError: string | null;
+  focusField: (field: PatientFormFieldPath) => void;
   patchField: <K extends keyof PatientFormData>(
     field: K,
     value: PatientFormData[K],
@@ -83,6 +90,7 @@ export function usePatientSync(
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingPatchRef = useRef<Partial<PatientFormData>>({});
   const lastChangedFieldRef = useRef<keyof PatientFormData | null>(null);
+  const focusedFieldRef = useRef<PatientFormFieldPath | null>(null);
 
   const initialFormDataRef = useRef(options?.initialFormData);
   const formDataRef = useRef<Partial<PatientFormData>>(
@@ -104,6 +112,7 @@ export function usePatientSync(
     revisionRef.current = 0;
     pendingPatchRef.current = {};
     lastChangedFieldRef.current = null;
+    focusedFieldRef.current = null;
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -142,6 +151,7 @@ export function usePatientSync(
           sessionId,
           requestId: request.requestId,
           formData: formDataRef.current,
+          focusedField: focusedFieldRef.current,
           patientStatus: patientStatusRef.current,
           revision,
           sentAt: new Date().toISOString(),
@@ -262,6 +272,8 @@ export function usePatientSync(
           sessionId,
           patch: { ...pendingPatchRef.current },
           changedField,
+          focusedField: focusedFieldRef.current,
+          patientStatus: patientStatusRef.current,
           revision,
           sentAt: new Date().toISOString(),
         };
@@ -314,6 +326,7 @@ export function usePatientSync(
       const revision = revisionRef.current;
       const statusPayload: StatusChangedPayload = {
         sessionId,
+        focusedField: focusedFieldRef.current,
         patientStatus: newStatus,
         lastActivityAt: new Date().toISOString(),
         revision,
@@ -330,6 +343,53 @@ export function usePatientSync(
             setSessionState((prev) => ({
               ...prev,
               syncError: "The patient status change could not be sent.",
+            }));
+          }
+        });
+    },
+    [sessionId],
+  );
+
+  const focusField = useCallback(
+    (focusedField: PatientFormFieldPath) => {
+      if (patientStatusRef.current === "submitted") {
+        return;
+      }
+
+      focusedFieldRef.current = focusedField;
+      patientStatusRef.current = "actively_filling";
+      setSessionState((prev) => ({
+        ...prev,
+        sessionId,
+        patientStatus: "actively_filling",
+      }));
+
+      const channel = channelRef.current;
+      if (!channel) {
+        return;
+      }
+
+      revisionRef.current = getNextRevision(revisionRef.current);
+      const revision = revisionRef.current;
+      const focusPayload: FieldFocusedPayload = {
+        sessionId,
+        focusedField,
+        patientStatus: "actively_filling",
+        lastActivityAt: new Date().toISOString(),
+        revision,
+      };
+
+      void channel
+        .send({
+          type: "broadcast",
+          event: REALTIME_EVENT.fieldFocused,
+          payload: focusPayload,
+        })
+        .then((result) => {
+          if (result !== "ok") {
+            setSessionState((prev) => ({
+              ...prev,
+              syncError: "The focused field could not be sent.",
             }));
           }
         });
@@ -392,6 +452,7 @@ export function usePatientSync(
 
   return {
     connectionStatus,
+    focusField,
     patientStatus,
     formData,
     syncError,

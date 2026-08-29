@@ -2,10 +2,12 @@ import type {
   EmergencyContact,
   Gender,
   PatientFormData,
+  PatientFormFieldPath,
   PatientStatus,
 } from "@/types";
 
 export const REALTIME_EVENT = {
+  fieldFocused: "FIELD_FOCUSED",
   formPatch: "FORM_PATCH",
   snapshotRequest: "SNAPSHOT_REQUEST",
   formSnapshot: "FORM_SNAPSHOT",
@@ -28,6 +30,22 @@ export const PATIENT_FORM_FIELDS: ReadonlyArray<keyof PatientFormData> = [
   "religion",
 ];
 
+export const PATIENT_FORM_FIELD_PATHS: ReadonlyArray<PatientFormFieldPath> = [
+  "firstName",
+  "middleName",
+  "lastName",
+  "dateOfBirth",
+  "gender",
+  "phoneNumber",
+  "email",
+  "address",
+  "preferredLanguage",
+  "nationality",
+  "emergencyContact.name",
+  "emergencyContact.relationship",
+  "religion",
+];
+
 const VALID_GENDERS: ReadonlySet<string> = new Set([
   "male",
   "female",
@@ -39,8 +57,18 @@ export type FormPatchPayload = {
   sessionId: string;
   patch: Partial<PatientFormData>;
   changedField: keyof PatientFormData;
+  focusedField?: PatientFormFieldPath | null;
+  patientStatus?: Exclude<PatientStatus, "submitted">;
   revision: number;
   sentAt: string;
+};
+
+export type FieldFocusedPayload = {
+  sessionId: string;
+  focusedField: PatientFormFieldPath;
+  patientStatus: "actively_filling";
+  lastActivityAt: string;
+  revision: number;
 };
 
 export type SnapshotRequestPayload = {
@@ -53,6 +81,7 @@ export type FormSnapshotPayload = {
   sessionId: string;
   requestId: string;
   formData: Partial<PatientFormData>;
+  focusedField?: PatientFormFieldPath | null;
   patientStatus: PatientStatus;
   revision: number;
   sentAt: string;
@@ -60,6 +89,7 @@ export type FormSnapshotPayload = {
 
 export type StatusChangedPayload = {
   sessionId: string;
+  focusedField?: PatientFormFieldPath | null;
   patientStatus: PatientStatus;
   lastActivityAt: string;
   revision: number;
@@ -74,6 +104,7 @@ export type FormSubmittedPayload = {
 };
 
 export type RealtimeEventPayloadMap = {
+  [REALTIME_EVENT.fieldFocused]: FieldFocusedPayload;
   [REALTIME_EVENT.formPatch]: FormPatchPayload;
   [REALTIME_EVENT.snapshotRequest]: SnapshotRequestPayload;
   [REALTIME_EVENT.formSnapshot]: FormSnapshotPayload;
@@ -108,10 +139,25 @@ function isPatientStatus(value: unknown): value is PatientStatus {
   );
 }
 
+function isPatientLifecycleStatus(
+  value: unknown,
+): value is Exclude<PatientStatus, "submitted"> {
+  return value === "actively_filling" || value === "inactive";
+}
+
 function isValidChangedField(value: unknown): value is keyof PatientFormData {
   return (
     typeof value === "string" &&
     PATIENT_FORM_FIELDS.includes(value as keyof PatientFormData)
+  );
+}
+
+export function isPatientFormFieldPath(
+  value: unknown,
+): value is PatientFormFieldPath {
+  return (
+    typeof value === "string" &&
+    PATIENT_FORM_FIELD_PATHS.includes(value as PatientFormFieldPath)
   );
 }
 
@@ -234,6 +280,11 @@ export function getFormPatchPayload(
     !isObject(payload.patch) ||
     !(payload.changedField in payload.patch) ||
     !isPartialPatientFormData(payload.patch) ||
+    (payload.focusedField !== undefined &&
+      payload.focusedField !== null &&
+      !isPatientFormFieldPath(payload.focusedField)) ||
+    (payload.patientStatus !== undefined &&
+      !isPatientLifecycleStatus(payload.patientStatus)) ||
     !isValidRevision(payload.revision) ||
     typeof payload.sentAt !== "string"
   ) {
@@ -241,6 +292,26 @@ export function getFormPatchPayload(
   }
 
   return payload as FormPatchPayload;
+}
+
+export function getFieldFocusedPayload(
+  message: BroadcastEnvelope,
+): FieldFocusedPayload | null {
+  const payload = message.payload;
+
+  if (
+    !isObject(payload) ||
+    typeof payload.sessionId !== "string" ||
+    payload.sessionId.length === 0 ||
+    !isPatientFormFieldPath(payload.focusedField) ||
+    payload.patientStatus !== "actively_filling" ||
+    typeof payload.lastActivityAt !== "string" ||
+    !isValidRevision(payload.revision)
+  ) {
+    return null;
+  }
+
+  return payload as FieldFocusedPayload;
 }
 
 export function getSnapshotRequestPayload(
@@ -275,6 +346,9 @@ export function getFormSnapshotPayload(
     payload.requestId.length === 0 ||
     !isObject(payload.formData) ||
     !isPartialPatientFormData(payload.formData) ||
+    (payload.focusedField !== undefined &&
+      payload.focusedField !== null &&
+      !isPatientFormFieldPath(payload.focusedField)) ||
     !isPatientStatus(payload.patientStatus) ||
     !isValidRevision(payload.revision) ||
     typeof payload.sentAt !== "string"
@@ -295,6 +369,9 @@ export function getStatusChangedPayload(
     typeof payload.sessionId !== "string" ||
     payload.sessionId.length === 0 ||
     !isPatientStatus(payload.patientStatus) ||
+    (payload.focusedField !== undefined &&
+      payload.focusedField !== null &&
+      !isPatientFormFieldPath(payload.focusedField)) ||
     typeof payload.lastActivityAt !== "string" ||
     !isValidRevision(payload.revision)
   ) {

@@ -1,7 +1,7 @@
 # UI/UX Design System & Responsive Strategy
 
 > **Project:** Agnos Health - Real-Time Patient Intake & Staff Monitoring System  
-> **Document Version:** 1.2.0
+> **Document Version:** 1.3.0
 > **Target Audience:** Reviewers, Evaluators, and Frontend Developers
 
 ---
@@ -77,6 +77,7 @@ The application embraces a **Clean, Modern HealthTech aesthetic** inspired by Ag
 2. **Inline Real-Time Validation:** Error messages appear on blur or submit attempt with red accent borders (`border-red-500`) and clear, human-readable helper text.
 3. **Conditional Emergency Contact Validation:** Both Emergency Contact fields may remain blank, but completing either one requires the other.
 4. **Demo Notice:** A visible notice reads `Demo only — Data is transmitted ephemerally and is not saved to a database or this browser.`
+5. **Patient-Focused Status UI:** The header shows realtime connection health, while active/inactive lifecycle indicators remain exclusive to the Staff monitoring view. Submission confirmation remains visible after a successful submit.
 
 ---
 
@@ -85,7 +86,10 @@ The application embraces a **Clean, Modern HealthTech aesthetic** inspired by Ag
 1. **Prominent Status Header:**
    - Displays Connection Health (`Connecting` / `Connected` / `Disconnected`) independently from Patient Status (`Active` / `Inactive` / `Submitted`) and the Session Code.
 2. **Live Field Pulse Animation:**
-   - When the patient modifies a field, the corresponding card row flashes with a temporary subtle teal glow (`bg-teal-50 border-teal-300 transition-all duration-500`) that fades back to white after 1.5 seconds.
+   - Moving focus to a Patient control immediately moves the corresponding Staff card highlight before any value changes.
+   - While connected and actively filling, the field uses a gentle repeating pulse/grow effect plus the text `Patient working here`.
+   - Inactive or disconnected sessions retain the last focused field as a static highlight labeled `Last active field`.
+   - `prefers-reduced-motion` disables the animation without removing the outline or text marker.
 3. **Empty State Handling:**
    - Fields that have not yet been touched display a soft placeholder (`"Waiting for input..."`) rather than empty white gaps.
 4. **Submission Lock State:**
