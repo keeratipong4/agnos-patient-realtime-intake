@@ -46,10 +46,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Keep connection state independent from Patient lifecycle state. Presence is
   for slow-changing participation; Broadcast carries form and lifecycle events.
 - Do not start P2 features until P0 is deployed and verified in production.
-- The Phase 3 realtime protocol release is deployed at
-  `https://agnos-patient-realtime-intake.vercel.app` as production v0.3.0.
-- Phase 4 Patient Form UI is complete on `feature/patient-form`, including the
-  single-action session launcher. Phase 5 Staff Monitoring UI is implemented
-  locally on `feature/staff-monitor`; Phase 6 QA and release work are next.
+- Production v0.5.0 at commit `7fa1a28` is deployed at
+  `https://agnos-patient-realtime-intake.vercel.app` and contains the complete
+  Patient Form and Staff Monitoring UI through Phase 5.
+- Phase 6 production behavior QA and Phase 7 documentation were synchronized on
+  August 30, 2026. Exact production checks at 375px, 768px, and 1440px and direct
+  authenticated Vercel runtime-log inspection remain unverified; see
+  `HANDOFF.md` and `docs/IMPLEMENTATION_PLAN.md` before claiming P0 completion.
 - Do not push, deploy, or create external resources without explicit user
   confirmation.

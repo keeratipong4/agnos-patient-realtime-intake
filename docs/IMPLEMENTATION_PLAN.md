@@ -160,15 +160,16 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 - [x] Keyboard navigation and labels work.
 - [x] Optional fields behave correctly.
 - [x] Patient status transitions are broadcast and recovered by the Phase 3 Staff synchronizer.
-- [ ] Patient status transitions are visible in the Staff UI (completed in Phase 5).
+- [x] Patient status transitions are visible in the Staff UI (completed in Phase 5).
 
 ---
 
 ## Phase 5: Staff Monitoring View (1.5-2.5 hours)
 
-> **Implemented locally August 29, 2026:** The complete Staff dashboard uses
-> `useStaffSync` directly and passes 89 total tests across 9 suites. Realtime
-> browser QA passed across Chrome Patient and in-app-browser Staff contexts.
+> **Released August 29, 2026:** The complete Staff dashboard uses
+> `useStaffSync` directly and is included in production v0.5.0 at `7fa1a28`.
+> Production behavior QA was completed across Chrome Patient and in-app-browser
+> Staff contexts on August 30; the remaining evidence gaps are recorded below.
 
 - [x] Display Connection Status independently from Patient Status.
 - [x] Display every Patient field, grouped consistently with the form.
@@ -191,31 +192,76 @@ This phase de-risks Supabase and Vercel before the full UI is built.
 
 ## Phase 6: P0 QA and Production Verification (2-3 hours)
 
-- [ ] Run lint, tests, and production build.
-- [ ] Test two real browser contexts rather than only components in one React tree.
-- [ ] Verify every field updates in real time.
-- [ ] Verify late join, Staff refresh, Patient disconnect, and reconnect behavior.
-- [ ] Verify two sessions are isolated.
-- [ ] Verify invalid and missing session IDs.
-- [ ] Verify no form payloads are logged in production.
-- [ ] Check keyboard navigation, focus visibility, labels, error associations, and status text.
-- [ ] Test Chrome plus one additional browser.
-- [ ] Re-deploy and repeat the P0 acceptance checklist on the public URL.
+- [x] Run the final local gate with Node 24.20.0: 89 tests pass across 9
+  suites, ESLint passes with no findings, and `next build --webpack` succeeds on
+  Next.js 16.3.3.
+- [x] Test two real browser contexts rather than only components in one React tree.
+- [x] Verify every field updates in real time, including both nested Emergency
+  Contact paths.
+- [x] Verify focus-only movement, the 1.8-second infinite active pulse, inactive
+  static highlighting, and disconnected static highlighting.
+- [x] Verify late join, Staff refresh, Patient disconnect, and reconnect behavior.
+- [x] Verify submitted Patient and Staff locking, disconnect preservation, and
+  rejection of a later draft event.
+- [x] Verify two sessions are isolated.
+- [x] Verify invalid and missing session IDs on Patient and Staff routes.
+- [ ] Verify no form payloads are logged in production. Browser consoles contain
+  no payloads and source contains no payload logging, but direct Vercel runtime
+  log inspection is blocked by authentication.
+- [x] Check keyboard navigation, focus visibility, labels, error associations,
+  and text-based status feedback.
+- [x] Test Chrome plus one additional available browser surface (Codex in-app
+  Browser). No other browser family was available.
+- [ ] Verify production layouts at exact 375px, 768px, and 1440px widths. The
+  available production browser surfaces ignored viewport overrides and retained
+  1469px/1280px CSS viewports; exact widths remain locally verified.
+- [x] Confirm the existing public deployment rather than re-deploying without
+  authorization. Vercel/GitHub production evidence identifies release
+  `7fa1a28`; the public alias returns HTTP 200.
+
+### Production Evidence — August 30, 2026
+
+- Vercel GitHub deployment `6154328987` is the newest Production deployment,
+  sourced from `7fa1a286fb4f9d88dc920c72dd9ed6817435cba7` and completed
+  successfully at `2026-08-29T09:25:39Z`.
+- Chrome Patient and in-app-browser Staff exchanged all form values in separate
+  contexts. A native keyboard update verified the date input path.
+- A focus-only event moved the empty Staff field marker. Computed CSS on the
+  active card reported `active-field-pulse 1.8s infinite`; inactivity and
+  disconnect removed the pulse while retaining `Last active field`.
+- Late-joining and refreshed Staff views recovered all values, lifecycle state,
+  and focused field while Patient remained connected.
+- Submission disabled all Patient controls and produced a timestamped Staff
+  summary. Disconnect and a subsequent draft from another Patient client did not
+  replace final values.
+- Two UUID sessions stayed isolated in both directions. Missing and malformed IDs
+  rendered the invalid-session recovery UI on both routes.
+- Labels, tab order, visible focus treatment, `aria-invalid`,
+  `aria-describedby`, and text-based statuses were inspected in production.
+- Browser consoles had no application errors, fake payload values, or
+  `Multiple GoTrueClient` warning. Chrome showed LocatorJS extension warnings
+  only; the second browser console was empty.
+- A deliberately older-revision packet was not injected into production. Stale
+  packet and packet-reordering behavior remain locally verified by automated
+  tests.
 
 ### P0 Definition of Done
-- [ ] All assignment requirements are implemented.
-- [ ] The deployed URL works without local development services.
-- [ ] Patient and Staff synchronize without manual refresh.
-- [ ] Late-joining Staff receives a snapshot while Patient is connected.
-- [ ] Status and connection state behave independently.
-- [ ] Responsive layouts pass at the three target widths.
-- [ ] No database, browser persistence, secrets, confidential PDF, or real patient data is present.
+- [ ] All assignment requirements are implementation- and production-verified.
+  Exact production widths and authenticated Vercel log inspection remain open.
+- [x] The deployed URL works without local development services.
+- [x] Patient and Staff synchronize without manual refresh.
+- [x] Late-joining Staff receives a snapshot while Patient is connected.
+- [x] Status and connection state behave independently.
+- [ ] Responsive layouts pass in production at the three target widths. They are
+  verified locally, not at exact production CSS viewports in this run.
+- [x] Source and repository inspection show no database, browser persistence,
+  secrets, confidential PDF, or real patient data.
 
 ---
 
 ## Phase 7: Submission Documentation and Handoff (1.5-2 hours)
 
-- [ ] Create `README.md` with:
+- [x] Create `README.md` with:
   - project overview;
   - live Patient and Staff testing instructions;
   - local setup and environment variables;
@@ -223,10 +269,23 @@ This phase de-risks Supabase and Vercel before the full UI is built.
   - real-time event and snapshot flow;
   - UI/UX decisions across viewports;
   - accepted demo limitations and production hardening plan.
-- [ ] Ensure documentation describes only features that are actually implemented.
-- [ ] Add the live URL and repository URL.
-- [ ] Run the final production checklist from a clean browser session.
+- [x] Ensure documentation describes only features that are actually implemented
+  and labels local, production, and blocked evidence separately.
+- [x] Add the live URL and repository URL.
+- [ ] Run the final production checklist from a clean browser session. The
+  behavior checklist passed except for the two evidence gaps recorded in Phase 6.
 - [ ] Prepare the submission email and send with at least a two-hour buffer before 23:59.
+
+### Remaining Submission Work
+
+1. Complete exact-width production checks with a browser harness that enforces
+   375px, 768px, and 1440px CSS viewports.
+2. Inspect authenticated Vercel runtime logs and confirm that no form payload is
+   present.
+3. Decide whether production stale-packet injection is required beyond the
+   automated monotonic-revision and packet-reordering suites.
+4. Review, commit, and push the documentation only with explicit permission.
+5. Prepare and send the submission email only with explicit permission.
 
 ---
 

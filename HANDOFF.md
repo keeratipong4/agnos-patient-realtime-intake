@@ -1,6 +1,6 @@
 # Session Handoff
 
-Updated: August 29, 2026 (Asia/Bangkok)
+Updated: August 30, 2026, 00:14 Asia/Bangkok
 
 ## Start Here
 
@@ -14,89 +14,143 @@ in `node_modules/next/dist/docs/` before writing Next.js code.
 Do not use `../preview-docs/`, `../STUDY_GUIDE_REALTIME.md`, or the confidential
 assignment PDF as an implementation specification.
 
-## Current State
+## Authoritative Git State
 
-- Checked-out branch: `feature/staff-monitor`. The Phase 5 Staff Monitoring UI
-  and focus-driven live feedback are fully committed (`aa6f17e`).
-- Local `develop`, `origin/develop`, `main`, and `feature/patient-form` point to
-  `9886d8a`.
-- Phase 0 through Phase 4 are integrated. Phase 5 Staff Monitoring UI is
-  implemented locally and Phase 6 QA/release work is next.
-- Production: https://agnos-patient-realtime-intake.vercel.app — deployment of
-  `9886d8a` has not been re-verified in this handoff.
-- Do not push, deploy, or create external resources without explicit permission.
+The remote-tracking refs were refreshed with `git fetch origin --prune` before
+this handoff work. The clean pre-QA snapshot was:
 
-## Verified Baseline
+- checked-out branch: `develop`;
+- `develop` and `origin/develop`: `0ef270d` — merge
+  `feature/staff-monitor` into `develop`;
+- `feature/staff-monitor` and `origin/feature/staff-monitor`: `31057d6`;
+- `main` and `origin/main`: `7fa1a28` — release v0.5.0;
+- focus/highlight implementation: `aa6f17e`, contained by
+  `feature/staff-monitor`, `develop`, and `main`.
 
-- Node.js 24; 89 Vitest tests pass across 9 suites; ESLint has no
-  warnings/errors; webpack
-  production build succeeds.
-- Landing has one `Create new session` action before revealing paired links.
-- Patient Form uses React Hook Form + Zod, scoped broadcasting, five-second
-  activity tracking, accessible errors, and submission locking.
-- Phase 3 realtime hooks already implement patches, lifecycle events, snapshot
-  recovery, monotonic revisions, session isolation, and client isolation.
-- Each isolated realtime client uses a unique ephemeral auth namespace, avoiding
-  Supabase GoTrue multi-instance warnings without browser persistence.
-- Browser QA verifies focus-only field movement, active pulse/grow animation,
-  inactive/disconnected static highlighting, and responsive layouts at exact
-  375px, 768px, and 1440px widths.
+Documentation changes from this QA handoff are intentionally uncommitted. No
+commit, push, deployment, release, submission email, or external resource was
+created.
 
-## Phase 5: Staff Monitoring UI
+## Production Release Evidence
 
-`src/components/staff/staff-monitor.tsx` now uses the existing
-`useStaffSync(sessionId)` hook directly and provides:
+Production: https://agnos-patient-realtime-intake.vercel.app
 
-- separate text-based Connection and Patient Status cards;
-- all Patient fields in the same three groups as the Patient Form, including
-  explicit `Waiting for input` values;
-- immediate focus-driven pulse/grow feedback, static inactive/disconnected
-  highlighting, and activity/submission timestamps;
-- connecting, waiting, disconnected, inactive, submitted, and invalid-session
-  states;
-- a read-only submitted summary protected by the existing hook guards; and
-- responsive one- and two-column Tailwind layouts.
+The public deployment is release `7fa1a286fb4f9d88dc920c72dd9ed6817435cba7`.
+Authoritative evidence collected on August 29-30, 2026:
 
-The new component integration suite drives the real synchronizer through a mock
-Realtime channel and covers full/partial snapshots, patches, recent-field
-feedback, lifecycle changes, disconnect preservation, and submission locking.
+- the Vercel GitHub App recorded the newest `Production` deployment as GitHub
+  deployment `6154328987`, sourced from `7fa1a28` at
+  `2026-08-29T09:25:38Z`;
+- the deployment status is `success` with `Deployment has completed` at
+  `2026-08-29T09:25:39Z`;
+- the commit status for `7fa1a28` is `success` in the `Vercel` context; and
+- the public production alias returned HTTP 200 from Vercel during verification.
+
+The deployment-specific Vercel URL requires authentication, but the public
+production alias is accessible without local services.
+
+## Production-Verified P0 Behavior
+
+All form entries below used synthetic demo data only.
+
+- Landing/session creation produced one UUID and paired Patient/Staff links.
+- Chrome Patient and Codex in-app-browser Staff ran in independent browser
+  contexts. These were the only two browser surfaces available.
+- All 13 controls reached Staff in real time, including exact nested paths for
+  `emergencyContact.name` and `emergencyContact.relationship`.
+- Focus alone moved the Staff marker before value entry. Connected active state
+  showed `Patient working here`; computed production CSS reported
+  `active-field-pulse`, `1.8s`, and `infinite`, with the teal outline/background
+  and a live scale transform.
+- Five-second inactivity retained a static `Last active field` marker with no
+  active pulse class.
+- Patient disconnect retained values and the static focused-field marker;
+  reconnect restored `Connected` and subsequent patches arrived immediately.
+- A brand-new Staff tab and a refreshed Staff tab recovered the complete draft,
+  focused field, and lifecycle status through the snapshot handshake.
+- Valid submission locked every Patient control and showed
+  `Submission Confirmed`. Staff showed a timestamped, read-only Submitted
+  summary.
+- Patient disconnect and a later draft from another Patient client did not
+  replace the submitted status or final values.
+- Two generated UUID sessions remained isolated in both directions.
+- Patient and Staff both rejected missing and malformed session IDs with an
+  explicit recovery link.
+- Keyboard navigation reached every form control, Submit, and the launcher link.
+  Labels use matching `for`/`id` pairs, keyboard focus has visible ring/outline
+  feedback, invalid controls use `aria-invalid`, and every validation message is
+  referenced through `aria-describedby`.
+- Connection, lifecycle, loading, inactive, disconnected, and submitted states
+  all use visible text in addition to color/icon feedback.
+- Browser console inspection found no fake form values, no application-originated
+  errors, and no `Multiple GoTrueClient` warning. Chrome reported only LocatorJS
+  extension warnings; the independent browser console was empty.
+
+## Locally Verified
+
+- Node.js 24 baseline with 89 Vitest tests across 9 suites.
+- ESLint baseline: 0 errors and 0 warnings.
+- `next build --webpack` baseline succeeds.
+- Exact 375px, 768px, and 1440px Patient/Staff layouts were previously checked
+  locally without horizontal overflow.
+- Unit and integration suites cover stale revision dropping, packet reordering,
+  snapshot recovery, focus recovery, reduced-motion behavior, and immutable
+  submitted state.
+- Source inspection found no `console.*` form logging, database writes,
+  `localStorage`, `sessionStorage`, IndexedDB, or cookie persistence.
+
+The final tests, lint, and build were re-run after documentation synchronization
+and are recorded below.
+
+## Not Production-Verified or Blocked
+
+- Exact 375px, 768px, and 1440px production viewport checks are not verified in
+  this run. Both available browser surfaces ignored their viewport override and
+  retained 1469px and 1280px CSS viewports. Desktop production layouts had no
+  horizontal overflow, and the exact target widths remain locally verified.
+- Direct Vercel runtime-log inspection is blocked by Vercel authentication in
+  the available Chrome context. Browser console logs and source logging paths
+  were checked, but Vercel production logs must not be marked verified without
+  authenticated evidence.
+- Production QA verified disconnect locking and rejection of a later draft after
+  submission. It did not inject a deliberately older-revision packet into the
+  public channel. Exact stale-packet behavior remains locally verified by tests.
+- `prefers-reduced-motion` behavior remains locally verified; the available
+  production browser controls did not expose a media-preference override.
 
 ## Protocol Guardrails
 
-- Presence reports connection only; Broadcast carries form/lifecycle state.
+- Presence reports Patient connection only; Broadcast carries form/lifecycle
+  state.
+- Preserve `FIELD_FOCUSED`, `FORM_PATCH`, `SNAPSHOT_REQUEST`, `FORM_SNAPSHOT`,
+  `STATUS_CHANGED`, and `FORM_SUBMITTED`.
 - Preserve monotonic revisions, stale-event dropping, and snapshot recovery.
 - Disconnect and stale events must never replace `submitted` state.
 - Keep one isolated Supabase client per synchronizer hook (ADR 009).
 - No database, auth, browser persistence, `/demo`, multi-patient dashboard, or
   form-payload logging.
 
-## Key Files
+## Remaining Submission Tasks
 
-- UI entry points: `src/app/staff/page.tsx` and
-  `src/components/staff/staff-monitor.tsx`.
-- Contracts: `src/hooks/use-staff-sync.ts`, `src/lib/realtime-events.ts`, and
-  `src/types/index.ts`.
-- Reference UI/spec: `src/components/patient/patient-form.tsx`, Phase 5 in
-  `docs/IMPLEMENTATION_PLAN.md`, and Staff details in `docs/UI_UX_DESIGN.md`.
+1. Repeat exact-width checks against the public URL in a production browser
+   harness that can enforce 375px, 768px, and 1440px CSS viewports.
+2. Inspect Vercel production runtime logs while authenticated and confirm that no
+   form payload appears.
+3. Decide whether a production stale-packet injection is required beyond the
+   existing automated stale-event coverage.
+4. Review and, only with explicit permission, commit/push the documentation
+   handoff.
+5. Prepare and send the submission email only with explicit permission.
 
-## Verification Before Handoff
+## Final Local Verification
 
-```bash
-nvm use
-git status --short
-git branch --show-current
-npm test
-npm run lint
-npm run build
-```
-
-Also test Patient and Staff in separate browser contexts for live updates, late
-join, refresh recovery, disconnect, inactivity, submission, and session
-isolation. Report blockers and leave commits/pushes for explicit approval.
-
-Local browser QA passed those realtime scenarios using Chrome Patient and
-in-app-browser Staff contexts with fake data. The desktop layout was visually
-inspected at the browser surface's 1280px CSS viewport. Exact 375px, 768px, and
-1440px visual checks remain manual because both browser viewport capabilities
-retained their existing desktop-sized CSS viewports, and the browser security
-policy rejected an embedded fixed-width harness. No workaround was attempted.
+- Toolchain: Node.js 24.20.0 and npm 11.19.0 via the checked-in `.nvmrc`.
+- `npm test`: 89 tests pass across 9 suites.
+- `npm run lint`: passes with no ESLint findings.
+- `npm run build`: succeeds with Next.js 16.3.3 and the supported webpack
+  fallback; `/`, `/patient`, and `/staff` build successfully.
+- The shell default was Node.js 20.17.0. Its first Vitest invocation stopped at
+  config loading with an ESM compatibility error and collected no tests; the
+  required Node 24 rerun above is the authoritative result.
+- `git diff --check` and `git diff --cached --check` pass. No `.env.local`,
+  `.vercel` metadata, PDF, preview-docs, or study-guide file is tracked.

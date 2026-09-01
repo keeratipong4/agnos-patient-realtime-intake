@@ -310,10 +310,10 @@ src/
 
 The form subscription used for broadcasting should not force a root form re-render on every keystroke. Use a scoped React Hook Form subscription, and clean up debounced callbacks and Supabase channels on unmount.
 
-### Phase 4 Implementation Status — Completed Locally August 29, 2026
+### Phase 4 Implementation Status — Released August 29, 2026
 
-The feature branch implements the complete Patient form with React Hook Form and
-the shared Zod schema. Independent `useWatch` subscriptions broadcast all twelve
+The released implementation contains the complete Patient form with React Hook
+Form and the shared Zod schema. Independent `useWatch` subscriptions broadcast all twelve
 top-level `PatientFormData` fields without observing the entire form from its root.
 The browser activity tracker transitions to `actively_filling` on interaction and
 to `inactive` after five seconds, window blur, or a hidden document. Valid submit
@@ -325,12 +325,15 @@ The landing page now uses one pre-session action instead of presenting Patient a
 Staff as independent cards. After UUID creation, one shared result surface explains
 that the Patient and Staff links are synchronized views of the same session.
 
-Production remains on the Phase 3 v0.3.0 release until the Phase 4 branch passes
-Preview review and the documented release workflow. The Supabase project currently
-runs in `ap-northeast-2` (Seoul); this is accepted for the assignment demo because
-P0 correctness and deployment take priority over regional latency optimization.
+Production v0.5.0 at commit `7fa1a28` contains the Phase 4 Patient Form and Phase
+5 Staff Monitor. The Vercel GitHub App recorded the successful Production
+deployment on August 29, 2026, and the public alias was behavior-tested on August
+30. The Supabase project currently runs in `ap-northeast-2` (Seoul); this is
+accepted for the assignment demo because P0 correctness and deployment take
+priority over regional latency optimization. The exact production QA boundary is
+recorded in `HANDOFF.md` and `docs/IMPLEMENTATION_PLAN.md`.
 
-### Phase 5 Implementation Status — Completed Locally August 29, 2026
+### Phase 5 Implementation Status — Released August 29, 2026
 
 The Staff route now renders a responsive read-only dashboard backed directly by
 `useStaffSync`. Connection Presence and Patient lifecycle status appear as

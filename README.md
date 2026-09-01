@@ -3,22 +3,22 @@
 Real-time Patient and Staff intake assignment built with Next.js 16, TypeScript,
 Tailwind CSS, React Hook Form, Zod, and Supabase Realtime.
 
-The current `feature/staff-monitor` branch includes the complete Phase 4 Patient
-intake form, the full Phase 5 Staff live monitoring dashboard, focus-driven
-real-time field highlights, scoped field broadcasting, five-second activity
-tracking, snapshot recovery, and a single-action session launcher. The deployed
-production app currently represents the Phase 3 realtime protocol release and is
-available at [agnos-patient-realtime-intake.vercel.app](https://agnos-patient-realtime-intake.vercel.app).
+Production v0.5.0 at commit `7fa1a28` includes the complete Patient intake form,
+the full Staff live monitoring dashboard, focus-driven real-time field
+highlights, scoped field broadcasting, five-second activity tracking, snapshot
+recovery, submitted-state locking, and a single-action session launcher. The
+public app is available at
+[agnos-patient-realtime-intake.vercel.app](https://agnos-patient-realtime-intake.vercel.app).
 
 ## Features
 
-- **Patient Intake Form (`/patient?sessionId=...`):**
+- **Patient Intake Form (`/patient?session=...`):**
   - Grouped fields (Personal Details, Contact & Demographics, Emergency Contact)
   - Inline schema validation with Zod and accessible error messages
   - Debounced real-time field broadcast and immediate focus broadcasting
   - 5-second idle and blur/visibility activity tracking (`actively_filling` / `inactive`)
   - Submission confirmation lock with clear demo data disclaimer
-- **Staff Live Monitor (`/staff?sessionId=...`):**
+- **Staff Live Monitor (`/staff?session=...`):**
   - Independent text-based cards for Connection Health and Patient Status
   - Live field synchronization matching Patient form groupings
   - Explicit `"Waiting for input"` indicators for untouched fields
@@ -26,6 +26,19 @@ available at [agnos-patient-realtime-intake.vercel.app](https://agnos-patient-re
   - Snapshot recovery on late join or reconnect
   - Submission state and payload persistence across disconnects
 - **Session Launcher (`/`):** Single-action `Create new session` generating paired UUID links.
+
+## Test the live application
+
+1. Open the [production launcher](https://agnos-patient-realtime-intake.vercel.app)
+   and select **Create new session**.
+2. Open the generated Patient and Staff links in separate browser contexts.
+3. Use synthetic demo data only. Focus a Patient field before typing to see the
+   Staff marker move immediately, then complete the form and submit it.
+4. Refresh or open another Staff view while Patient remains connected to exercise
+   snapshot recovery. Disconnect and reconnect Patient to inspect the separate
+   connection and lifecycle states.
+
+Do not enter real personal or patient information.
 
 ## Local setup
 
@@ -114,6 +127,38 @@ src/
 - Supabase auth persistence is disabled; each hook uses an isolated ephemeral client.
 - Public Realtime channels are acceptable only for this assignment demo.
 - If both clients disconnect, session data is lost by design.
+- A production healthcare implementation would require authentication, private
+  channels and authorization policies, server-side validation, audit controls,
+  encryption and key management, and an explicit retention/deletion policy.
+
+## Verification status
+
+Production behavior was checked on August 30, 2026 with Chrome Patient and an
+independent Codex in-app-browser Staff context using fake data only. The verified
+flow includes every form field, focus-only movement, the 1.8-second active pulse,
+inactive/disconnected static highlighting, reconnect, late join, Staff refresh,
+two-session isolation, invalid IDs, accessible validation, submission locking,
+and rejection of a later draft after submission. Browser consoles contained no
+form values, application errors, or `Multiple GoTrueClient` warning; Chrome
+reported LocatorJS extension warnings only.
+
+The release identity is backed by Vercel's GitHub deployment metadata: Production
+deployment `6154328987` was sourced from `7fa1a28` and completed successfully on
+August 29, 2026. The public alias also returned HTTP 200 during verification.
+
+Evidence boundaries are explicit:
+
+- **Locally verified:** 89 Vitest tests, ESLint with zero warnings/errors,
+  `next build --webpack`, stale-event and packet-reordering guards,
+  reduced-motion behavior, and exact 375px/768px/1440px layouts without
+  horizontal overflow.
+- **Not production-verified in this run:** exact target widths, because both
+  available browser surfaces ignored viewport overrides; deliberately injecting
+  an older-revision packet; and direct Vercel runtime-log inspection, because the
+  available Vercel dashboard context required authentication.
+
+See `HANDOFF.md` and `docs/IMPLEMENTATION_PLAN.md` for the complete acceptance
+matrix and remaining submission work.
 
 ## Documentation
 
@@ -133,6 +178,9 @@ Operational guidance:
 ## Deployment
 
 - Production: https://agnos-patient-realtime-intake.vercel.app
+- Repository: https://github.com/keeratipong4/agnos-patient-realtime-intake
+- Release: v0.5.0, commit `7fa1a28`
 - Host: Vercel, using the Node.js 24 runtime.
 - Realtime: Supabase Broadcast and Presence in `ap-northeast-2` (Seoul).
-- Verified on August 28, 2026 with two production browser tabs.
+- Release identity and the production behavior boundary were verified on August
+  30, 2026.
